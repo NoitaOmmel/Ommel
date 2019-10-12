@@ -33,6 +33,7 @@ namespace Ommel {
 		public static Logger Logger = new Logger("Ommel");
 
 		static Ommel() {
+            Logger.MaxLogLevel = Logger.LogLevel.Debug;
 		}
 
 		public string NoitaPath;
@@ -51,6 +52,7 @@ namespace Ommel {
         public List<Mod> Mods;
 		public bool ExtraChecks = false;
         public bool IgnoreModLoadOrder = false;
+        public bool LaunchNoitaAfterwards = true;
 		
 		private List<string> BackedUpFiles = new List<string>();
 		private List<string> AddedFiles = new List<string>();
@@ -328,7 +330,7 @@ namespace Ommel {
 
         private void DeleteWakFiles() {
             if (File.Exists(NoitaOmmelExtractInfoPath)) {
-                Logger.Debug($"Restoring data folder");
+                Logger.Info($"Restoring data folder");
 
                 using (var f = new StreamReader(File.OpenRead(NoitaOmmelExtractInfoPath))) {
                     while (!f.EndOfStream) {
@@ -370,6 +372,8 @@ namespace Ommel {
                     if (args.Length <= i + 1) throw new Exception("Missing args after -args");
 
                     NoitaLaunchArgs = args[i + 1];
+                } else if (arg == "-dont-launch") {
+                    LaunchNoitaAfterwards = false;
                 }
             }
 		}
@@ -479,6 +483,7 @@ namespace Ommel {
         }
 
         public void LaunchNoita() {
+            if (!LaunchNoitaAfterwards) return;
             Logger.Info($"Starting Noita");
             var proc = new ProcessStartInfo();
             proc.UseShellExecute = true;

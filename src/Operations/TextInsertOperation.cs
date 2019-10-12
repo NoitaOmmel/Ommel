@@ -4,7 +4,6 @@ using System.IO;
 using System.Text;
 using System.Xml;
 using NetLua;
-using YAXLib;
 
 namespace Ommel {
 	public class TextInsertOperation : FileOperation {

@@ -2,11 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using ModTheGungeon;
-using ExtendedXmlSerializer.Configuration;
-using ExtendedXmlSerializer.Core;
-using ExtendedXmlSerializer.ExtensionModel.Xml;
-using NetLua;
+using ModTheGungeon;using NetLua;
 using System.Xml;
 using System.Diagnostics;
 
@@ -34,9 +30,6 @@ namespace Ommel {
 
 		static Ommel() {
 		}
-
-        public IExtendedXmlSerializer Serializer = new ConfigurationContainer()
-            .Create();
 
 		public string NoitaPath;
 		public string NoitaModsPath;

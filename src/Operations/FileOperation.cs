@@ -4,10 +4,8 @@ using System.IO;
 using System.Text;
 using System.Xml;
 using ModTheGungeon;
-using YAXLib;
 
 namespace Ommel {
-    [YAXSerializableType(Options = YAXSerializationOptions.SuppressMetadataAttributes)]
 	public abstract class FileOperation {
 		public class BlacklistedFileTypeException : Exception {
 			public BlacklistedFileTypeException(string name, Ommel.FileType ftype, string why) : base($"You are not allowed to use operation '{name}' on files of type '{ftype}' - {why}") {
@@ -42,19 +40,13 @@ namespace Ommel {
 		public string Key = "none";
 		public Logger Logger;
 
-        [YAXSerializeAs("file")]
-        [YAXAttributeFor(".")]
         public string SourceFile;
 
-        [YAXSerializeAs("target")]
-        [YAXAttributeFor(".")]
         private string _TargetFile;
 
         public string PlaceholderFile;
         public List<string> Placeholders;
 
-        [YAXSerializeAs("trim")]
-        [YAXAttributeFor(".")]
         public bool Trim;
 
         public string TargetFile {

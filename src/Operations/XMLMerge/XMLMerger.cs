@@ -75,8 +75,30 @@ namespace Ommel {
                     if (((XmlElement)patch_node).HasAttribute("DELETE")) {
                         continue;
                     }
+                    var attribs = ((XmlElement)patch_node).Attributes;
+                    for (var j = 0; j < attribs.Count; j++) {
+                        var attrib = attribs[j];
+                        if (attrib.Name.StartsWith("MATCH_", StringComparison.InvariantCulture)) {
+                            var real_attrib_name = attrib.Name.Substring("MATCH_".Length);
+
+                            Console.WriteLine($"real {attrib.Value} a {((XmlElement)node).GetAttribute(real_attrib_name)}");
+
+                            if (((XmlElement)node).GetAttribute(real_attrib_name) != attrib.Value) {
+                                Console.WriteLine($"{attrib.Value} {((XmlElement)node).GetAttribute(real_attrib_name)}");
+                                patch_offs -= 1;
+                                last_patch_idx -= 1;
+                                continue;
+                            }
+                        }
+                    }
                     var elem = (XmlElement)x.AppendChild(d.CreateElement(((XmlElement)node).Name));
                     MergeElement(d, elem, (XmlElement)node, (XmlElement)patch_node);
+                    for (var j = 0; j < attribs.Count; j++) {
+                        var attrib = attribs[j];
+                        if (attrib.Name.StartsWith("MATCH_", StringComparison.InvariantCulture)) {
+                            elem.RemoveAttribute(attrib.Name);
+                        }
+                    }
                     x.AppendChild(elem);
                 }
                 else {
@@ -90,6 +112,7 @@ namespace Ommel {
 
             for (var i = last_patch_idx; i < b.ChildNodes.Count; i++) {
                 if (b.ChildNodes[i].Name == "APPEND") continue;
+                if (b is XmlElement && ((XmlElement)b.ChildNodes[i]).HasAttribute("DELETE")) continue;
                 x.AppendChild(d.ImportNode(b.ChildNodes[i], true));
             }
         }

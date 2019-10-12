@@ -72,6 +72,9 @@ namespace Ommel {
                 last_target_idx += 1;
 
                 if (node is XmlElement && node.Name == patch_node.Name) {
+                    if (((XmlElement)patch_node).HasAttribute("DELETE")) {
+                        continue;
+                    }
                     var elem = (XmlElement)x.AppendChild(d.CreateElement(((XmlElement)node).Name));
                     MergeElement(d, elem, (XmlElement)node, (XmlElement)patch_node);
                     x.AppendChild(elem);

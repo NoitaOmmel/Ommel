@@ -8,6 +8,7 @@ using ExtendedXmlSerializer.Core;
 using ExtendedXmlSerializer.ExtensionModel.Xml;
 using NetLua;
 using System.Xml;
+using System.Diagnostics;
 
 namespace Ommel {
 	public static class OmmelMain {
@@ -48,7 +49,9 @@ namespace Ommel {
 		public string NoitaOmmelLibDataPath;
         public string NoitaOmmelExtractInfoPath;
         public string NoitaDataWakPath;
-		public List<Mod> Mods;
+        public string NoitaLaunchExe;
+        public string NoitaLaunchArgs;
+        public List<Mod> Mods;
 		public bool ExtraChecks = false;
         public bool IgnoreModLoadOrder = false;
 		
@@ -100,7 +103,6 @@ namespace Ommel {
 
         private void SetAppdataPaths(string noita_appdata_path) {
             NoitaAppDataPath = noita_appdata_path;
-            //= Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LocalLow", "Nolla_Games_Noita");
             NoitaSaveConfigPath = Path.Combine(NoitaAppDataPath, "save_shared", "config.xml");
         }
 
@@ -360,12 +362,19 @@ namespace Ommel {
                 } else if (arg == "-noita-appdata-path") {
                     if (args.Length <= i + 1) throw new Exception("Missing path after -noita-appdata-path");
 
-                    SetAppdataPaths(args[i + 1]);
-                }
-                else if (arg == "-extra-checks") {
+                    SetAppdataPaths(args[i + 1]); 
+                } else if (arg == "-extra-checks") {
 					ExtraChecks = true;
-				}
-			}
+				} else if (arg == "-exe") {
+                    if (args.Length <= i + 1) throw new Exception("Missing executable after -exe");
+
+                    NoitaLaunchExe = args[i + 1];
+                } else if (arg == "-args") {
+                    if (args.Length <= i + 1) throw new Exception("Missing args after -args");
+
+                    NoitaLaunchArgs = args[i + 1];
+                }
+            }
 		}
 
         public bool IsModDataEntry(string path) {
@@ -472,16 +481,47 @@ namespace Ommel {
             Directory.Delete(NoitaOmmelBackupPath, true);
         }
 
+        public void LaunchNoita() {
+            Logger.Info($"Starting Noita");
+            var proc = new ProcessStartInfo();
+            proc.UseShellExecute = true;
+            proc.FileName = NoitaLaunchExe;
+            proc.Arguments = NoitaLaunchArgs;
+            var proc_running = Process.Start(proc); 
+            proc_running.WaitForExit();
+            if (proc_running.ExitCode != 0) {
+                Logger.Error($"Failed launching Noita!");
+            }
+
+        }
+
         public void Start() {
 			Logger.Info($"OMMEL v{VERSION} STARTING");
 			Logger.Info($"Target: Noita {NOITA_VERSION}");
 
+            if (NoitaPath == null && NoitaLaunchExe != null) {
+                if (File.Exists(NoitaLaunchExe)) {
+                    NoitaPath = Path.GetDirectoryName(NoitaLaunchExe);
+                }
+            }
+
+            if (NoitaLaunchExe == null) {
+                NoitaLaunchExe = Path.Combine(NoitaPath, "noita.exe");
+            }
+
+            if (NoitaLaunchArgs == null) NoitaLaunchArgs = "";
+
+            if (NoitaAppDataPath == null) {
+                NoitaAppDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LocalLow", "Nolla_Games_Noita");
+            }
+
             CheckIfUpdated();
 			TryRestoreData();
 			VerifyPaths();
-			LoadMods();
+            LoadMods();
 			StitchMods();
 			WriteFileInfo();
+            LaunchNoita();
 		}
 	}
 }

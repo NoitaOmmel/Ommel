@@ -13,10 +13,10 @@ namespace Ommel {
                 var child = elem.ChildNodes[i];
 
                 if (child.Name == "Table" && child.ChildNodes.Count > 0) {
-                    var tab = child.ChildNodes[i];
+                    var tab = child.ChildNodes[0];
                     Table = LuaSearchXMLTypes.GetExpression(tab.Name, tab as XmlElement);
                 } else if (child.Name == "Index" && child.ChildNodes.Count > 0) {
-                    var idx = child.ChildNodes[i];
+                    var idx = child.ChildNodes[0];
                     Index = LuaSearchXMLTypes.GetExpression(idx.Name, idx as XmlElement);
                 }
             }

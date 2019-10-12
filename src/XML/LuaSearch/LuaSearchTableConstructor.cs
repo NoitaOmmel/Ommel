@@ -30,6 +30,8 @@ namespace Ommel {
                     for (var j = 0; j < child.ChildNodes.Count; j++) {
                         var innerchild = child.ChildNodes[i];
 
+                        if (innerchild.Name != "Entry") continue;
+
                         var kv = new XMLLuaSearchKeyValuePair();
                         kv.FillIn(innerchild as XmlElement);
                         Values.Add(kv);

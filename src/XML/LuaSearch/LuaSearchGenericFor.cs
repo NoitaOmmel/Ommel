@@ -17,10 +17,10 @@ namespace Ommel {
                 if (child.Name == "Variables") {
                     Variables = new List<string>();
                     for (var j = 0; j < child.ChildNodes.Count; j++) {
-                        var innerchild = child.ChildNodes[i];
+                        var innerchild = child.ChildNodes[j];
 
-                        if (innerchild is XmlText) {
-                            Variables.Add(((XmlText)innerchild).InnerText);
+                        if (innerchild is XmlElement && ((XmlElement)innerchild).Name == "Variable" && ((XmlElement)innerchild).HasAttribute("value")) {
+                            Variables.Add(((XmlElement)innerchild).GetAttribute("value"));
                         }
                     }
                 } else if (child.Name == "Expressions") {

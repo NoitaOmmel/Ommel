@@ -18,8 +18,8 @@ namespace Ommel {
                     for (var j = 0; j < child.ChildNodes.Count; j++) {
                         var innerchild = child.ChildNodes[i];
 
-                        if (innerchild is XmlText) {
-                            Names.Add(((XmlText)innerchild).InnerText);
+                        if (innerchild is XmlElement && ((XmlElement)innerchild).Name == "Name" && ((XmlElement)innerchild).HasAttribute("value")) {
+                            Names.Add(((XmlElement)innerchild).GetAttribute("value"));
                         }
                     }
                 }

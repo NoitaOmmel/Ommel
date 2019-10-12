@@ -86,6 +86,7 @@ namespace Ommel {
             }
 
             for (var i = last_patch_idx; i < b.ChildNodes.Count; i++) {
+                if (b.ChildNodes[i].Name == "APPEND") continue;
                 x.AppendChild(d.ImportNode(b.ChildNodes[i], true));
             }
         }

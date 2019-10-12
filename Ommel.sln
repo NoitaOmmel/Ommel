@@ -1,0 +1,55 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ommel", "Ommel.csproj", "{646DFBF4-7503-4258-AC7F-0684052D3458}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Logger", "libs\Logger\Logger.csproj", "{1C734127-AC83-4ECB-ABCA-32B98DFE49C7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetLua", "libs\NetLua\NetLua\NetLua.csproj", "{6B52EB11-E6A7-4771-94B0-7F87EA28211D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+		Build|Any CPU = Build|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{646DFBF4-7503-4258-AC7F-0684052D3458}.Debug|x86.ActiveCfg = Debug|x86
+		{646DFBF4-7503-4258-AC7F-0684052D3458}.Debug|x86.Build.0 = Debug|x86
+		{646DFBF4-7503-4258-AC7F-0684052D3458}.Release|x86.ActiveCfg = Release|x86
+		{646DFBF4-7503-4258-AC7F-0684052D3458}.Release|x86.Build.0 = Release|x86
+		{646DFBF4-7503-4258-AC7F-0684052D3458}.Build|Any CPU.ActiveCfg = Debug|x86
+		{646DFBF4-7503-4258-AC7F-0684052D3458}.Build|Any CPU.Build.0 = Debug|x86
+		{1C734127-AC83-4ECB-ABCA-32B98DFE49C7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1C734127-AC83-4ECB-ABCA-32B98DFE49C7}.Debug|x86.Build.0 = Debug|Any CPU
+		{1C734127-AC83-4ECB-ABCA-32B98DFE49C7}.Release|x86.ActiveCfg = Release|Any CPU
+		{1C734127-AC83-4ECB-ABCA-32B98DFE49C7}.Release|x86.Build.0 = Release|Any CPU
+		{1C734127-AC83-4ECB-ABCA-32B98DFE49C7}.Build|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C734127-AC83-4ECB-ABCA-32B98DFE49C7}.Build|Any CPU.Build.0 = Debug|Any CPU
+		{6B52EB11-E6A7-4771-94B0-7F87EA28211D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6B52EB11-E6A7-4771-94B0-7F87EA28211D}.Debug|x86.Build.0 = Debug|Any CPU
+		{6B52EB11-E6A7-4771-94B0-7F87EA28211D}.Release|x86.ActiveCfg = Release|Any CPU
+		{6B52EB11-E6A7-4771-94B0-7F87EA28211D}.Release|x86.Build.0 = Release|Any CPU
+		{6B52EB11-E6A7-4771-94B0-7F87EA28211D}.Build|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B52EB11-E6A7-4771-94B0-7F87EA28211D}.Build|Any CPU.Build.0 = Debug|Any CPU
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		Policies = $0
+		$0.DotNetNamingPolicy = $1
+		$0.TextStylePolicy = $2
+		$2.inheritsSet = null
+		$2.scope = text/x-csharp
+		$0.CSharpFormattingPolicy = $3
+		$3.NewLinesForBracesInTypes = False
+		$3.NewLinesForBracesInMethods = False
+		$3.scope = text/x-csharp
+		$3.IndentSwitchSection = False
+		$3.NewLinesForBracesInProperties = False
+		$3.NewLinesForBracesInAccessors = False
+		$3.NewLinesForBracesInAnonymousMethods = False
+		$3.NewLinesForBracesInControlBlocks = False
+		$3.NewLinesForBracesInAnonymousTypes = False
+		$3.NewLinesForBracesInObjectCollectionArrayInitializers = False
+		$3.NewLinesForBracesInLambdaExpressionBody = False
+	EndGlobalSection
+EndGlobal

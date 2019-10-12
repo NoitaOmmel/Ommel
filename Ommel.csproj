@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProjectGuid>{646DFBF4-7503-4258-AC7F-0684052D3458}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Ommel</RootNamespace>
+    <AssemblyName>Ommel</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ExternalConsole>true</ExternalConsole>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ExternalConsole>true</ExternalConsole>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="YamlDotNet">
+      <HintPath>packages\YamlDotNet.7.0.0\lib\net35\YamlDotNet.dll</HintPath>
+    </Reference>
+    <Reference Include="Irony">
+      <HintPath>libs\NetLua\packages\Irony.0.9.1-net40\lib\net40\Irony.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml" />
+    <Reference Include="YAXLib">
+      <HintPath>packages\YAXLib.2.15\lib\net4.0\YAXLib.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="XSerializer">
+      <HintPath>packages\XSerializer.0.4.2\lib\net40\XSerializer.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Collections.Immutable">
+      <HintPath>packages\System.Collections.Immutable.1.6.0\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Interactive">
+      <HintPath>packages\System.Interactive.4.0.0\lib\net45\System.Interactive.dll</HintPath>
+    </Reference>
+    <Reference Include="ExtendedXmlSerializer">
+      <HintPath>packages\ExtendedXmlSerializer.2.1.23\lib\net45\ExtendedXmlSerializer.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="src\Ommel.cs" />
+    <Compile Include="src\XML\ModMetadata.cs" />
+    <Compile Include="src\Mod.cs" />
+    <Compile Include="src\Operations\FileOperation.cs" />
+    <Compile Include="src\Operations\OverwriteOperation.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchVariable.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchStringLiteral.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchExpression.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchNumberLiteral.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchNilLiteral.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchBoolLiteral.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchVarargsLiteral.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchFunctionCall.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchBinaryExpression.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchUnaryExpression.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchTableConstructor.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchKeyValuePair.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchAssignment.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchStatement.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchAssignable.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchReturnStatement.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchBreakStatement.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchLocalAssignment.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchBlock.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchWhileStatement.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchRepeatStatement.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchNumericFor.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchGenericFor.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchIfStatement.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchTableAccess.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchFunctionDefinition.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchElement.cs" />
+    <Compile Include="src\Operations\LuaInsert\ASTSearchVisitor.cs" />
+    <Compile Include="src\Operations\TextInsertOperation.cs" />
+    <Compile Include="src\Operations\StubOperation.cs" />
+    <Compile Include="src\Operations\CopyOperation.cs" />
+    <Compile Include="src\Operations\LuaEventOperation.cs" />
+    <Compile Include="src\Operations\LuaInsert\LuaInsertOperation.cs" />
+    <Compile Include="src\Operations\XMLMerge\XMLMerger.cs" />
+    <Compile Include="src\Operations\XMLMerge\XMLMergeOperation.cs" />
+    <Compile Include="src\XML\OmmelMetadata.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchArray.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchVariableName.cs" />
+    <Compile Include="src\XML\LuaSearch\LuaSearchXMLTypes.cs" />
+    <Compile Include="src\NoitaConfig.cs" />
+    <Compile Include="src\WizardPak\WakExtractor.cs" />
+    <Compile Include="src\WizardPak\Aes128CounterMode.cs" />
+    <Compile Include="src\WizardPak\NollaPrng.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="src\" />
+    <Folder Include="src\XML\" />
+    <Folder Include="src\Operations\" />
+    <Folder Include="src\XML\LuaSearch\" />
+    <Folder Include="src\Operations\LuaInsert\" />
+    <Folder Include="src\Operations\XMLMerge\" />
+    <Folder Include="src\WizardPak\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="libs\Logger\Logger.csproj">
+      <Project>{1C734127-AC83-4ECB-ABCA-32B98DFE49C7}</Project>
+      <Name>Logger</Name>
+    </ProjectReference>
+    <ProjectReference Include="libs\NetLua\NetLua\NetLua.csproj">
+      <Project>{6B52EB11-E6A7-4771-94B0-7F87EA28211D}</Project>
+      <Name>NetLua</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="res\ommelrt.lua">
+      <LogicalName>ommelrt.lua</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+</Project>

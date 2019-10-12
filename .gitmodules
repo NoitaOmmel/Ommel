@@ -1,0 +1,6 @@
+[submodule "libs/Logger"]
+	path = libs/Logger
+	url = https://github.com/modthegungeon/Logger
+[submodule "libs/NetLua"]
+	path = libs/NetLua
+	url = https://github.com/frabert/NetLua

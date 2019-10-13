@@ -81,10 +81,7 @@ namespace Ommel {
                         if (attrib.Name.StartsWith("MATCH_", StringComparison.InvariantCulture)) {
                             var real_attrib_name = attrib.Name.Substring("MATCH_".Length);
 
-                            Console.WriteLine($"real {attrib.Value} a {((XmlElement)node).GetAttribute(real_attrib_name)}");
-
                             if (((XmlElement)node).GetAttribute(real_attrib_name) != attrib.Value) {
-                                Console.WriteLine($"{attrib.Value} {((XmlElement)node).GetAttribute(real_attrib_name)}");
                                 patch_offs -= 1;
                                 last_patch_idx -= 1;
                                 continue;

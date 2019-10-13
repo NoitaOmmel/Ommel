@@ -28,6 +28,10 @@ namespace Ommel {
 			return Path.Combine(DirPath, path);
 		}
 
+        public string GetAPIPath(string file) {
+            return Path.Combine("mods", DirName, file);
+        }
+
         public Dictionary<string, string> LoadReplacementMap(string path) {
             Dictionary<string, string> dict;
             if (ReplacementMapMap.TryGetValue(path, out dict)) return dict;
@@ -81,5 +85,13 @@ namespace Ommel {
 			txt = ReplaceStrings(string_map, keys, prefix, suffix, txt);
 			File.WriteAllText(path, txt);
 		}
-	}
+
+        public void ConvertToNoitaAPI(StreamWriter writer) {
+            for (var i = 0; i < Ommeldata.Operations.Count; i++) {
+                var op = Ommeldata.Operations[i];
+
+                op.ConvertToNoitaAPI(this, writer);
+            }
+        }
+    }
 }

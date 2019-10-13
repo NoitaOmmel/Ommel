@@ -18,9 +18,9 @@ namespace Ommel {
 
 	public class Ommel {
 #if DEBUG
-        public const string VERSION = "0.1.2-dev";
+        public const string VERSION = "0.1.3-dev";
 #else
-        public const string VERSION = "0.1.2";
+        public const string VERSION = "0.1.3";
 #endif
         public const string NOITA_VERSION = "mods-beta 1+";
 		public const string MODS_FOLDER_NAME = "mods";
@@ -53,6 +53,7 @@ namespace Ommel {
 		public bool ExtraChecks = false;
         public bool IgnoreModLoadOrder = false;
         public bool LaunchNoitaAfterwards = true;
+        public bool WriteAutoAPIConversion = false;
 		
 		private List<string> BackedUpFiles = new List<string>();
 		private List<string> AddedFiles = new List<string>();
@@ -252,7 +253,11 @@ namespace Ommel {
 		}
 
 		private void WriteOmmelData() {
-			WriteStaticData();
+            var ommel_data_path = Path.Combine(NoitaPath, "data", "ommel");
+            if (!File.Exists(ommel_data_path)) {
+                Directory.CreateDirectory(ommel_data_path);
+            }
+            WriteStaticData();
 			WriteLib();
 		}
 
@@ -374,6 +379,8 @@ namespace Ommel {
                     NoitaLaunchArgs = args[i + 1];
                 } else if (arg == "-dont-launch") {
                     LaunchNoitaAfterwards = false;
+                } else if (arg == "-write-auto-api-conversion") {
+                    WriteAutoAPIConversion = true;
                 }
             }
 		}
@@ -482,6 +489,15 @@ namespace Ommel {
             Directory.Delete(NoitaOmmelBackupPath, true);
         }
 
+        public void ConvertToNoitaAPI() {
+            if (!WriteAutoAPIConversion) return;
+            for (var i = 0; i < Mods.Count; i++) {
+                var mod = Mods[i];
+                using (var w = new StreamWriter(mod.GetFile("ommel-autoconvert.lua")))
+                    mod.ConvertToNoitaAPI(w);
+            }
+        }
+
         public void LaunchNoita() {
             if (!LaunchNoitaAfterwards) return;
             Logger.Info($"Starting Noita");
@@ -521,6 +537,7 @@ namespace Ommel {
 			TryRestoreData();
 			VerifyPaths();
             LoadMods();
+            ConvertToNoitaAPI();
 			StitchMods();
 			WriteFileInfo();
             LaunchNoita();

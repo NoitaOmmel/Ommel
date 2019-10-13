@@ -97,5 +97,13 @@ namespace Ommel {
 
             DoReplaceIfRequested(mod, mod_target_file);
 		}
-	}
+
+        public override void ConvertToNoitaAPI(Mod mod, StreamWriter writer) {
+            if (Event == "leave") {
+                writer.WriteLine($"ModLuaFileAppend(\"{TargetFile}\", \"{mod.GetAPIPath(SourceFile)}\")");
+            } else {
+                base.ConvertToNoitaAPI(mod, writer);
+            }
+        }
+    }
 }

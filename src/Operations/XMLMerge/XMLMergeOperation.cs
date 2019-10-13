@@ -55,5 +55,12 @@ namespace Ommel {
 
             DoReplaceIfRequested(mod, target_path);
         }
+
+        public override void ConvertToNoitaAPI(Mod mod, StreamWriter writer) {
+            if (TargetFile == "data/magic_numbers.xml" || TargetFile == "data/magic_numbers_disable_debug.xml") {
+                writer.WriteLine($"ModMagicNumbersFileAdd(\"{mod.GetAPIPath(SourceFile)}\")");
+            }
+            else base.ConvertToNoitaAPI(mod, writer);
+        }
     }
 }

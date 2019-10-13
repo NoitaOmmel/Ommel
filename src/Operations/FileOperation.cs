@@ -175,5 +175,9 @@ namespace Ommel {
                 }
             }
         }
+
+        public virtual void ConvertToNoitaAPI(Mod mod, StreamWriter writer) {
+            writer.WriteLine($"-- No conversion for operation {Key}");
+        }
     }
 }

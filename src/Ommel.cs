@@ -254,7 +254,7 @@ namespace Ommel {
 
 		private void WriteOmmelData() {
             var ommel_data_path = Path.Combine(NoitaPath, "data", "ommel");
-            if (!File.Exists(ommel_data_path)) {
+            if (!Directory.Exists(ommel_data_path)) {
                 Directory.CreateDirectory(ommel_data_path);
             }
             WriteStaticData();

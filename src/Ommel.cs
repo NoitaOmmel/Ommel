@@ -551,17 +551,19 @@ namespace Ommel {
             File.Delete(NoitaOmmelLogPath);
             LogFile = new StreamWriter(File.OpenWrite(NoitaOmmelLogPath));
 
-            CheckIfUpdated();
-			TryRestoreData();
-			VerifyPaths();
-            LoadMods();
-            ConvertToNoitaAPI();
-			StitchMods();
-			WriteFileInfo();
-            LaunchNoita();
-
-            LogFile.Dispose();
-            LogFile = null;
+            try {
+                CheckIfUpdated();
+                TryRestoreData();
+                VerifyPaths();
+                LoadMods();
+                ConvertToNoitaAPI();
+                StitchMods();
+                WriteFileInfo();
+                LaunchNoita();
+            } finally {
+                LogFile.Dispose();
+                LogFile = null;
+            }
 		}
 	}
 }

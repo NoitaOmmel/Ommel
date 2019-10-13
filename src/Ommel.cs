@@ -2,9 +2,14 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using ModTheGungeon;using NetLua;
+using ModTheGungeon;
+using NetLua;
 using System.Xml;
 using System.Diagnostics;
+using System.Windows.Forms;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Net;
 
 namespace Ommel {
 	public static class OmmelMain {
@@ -57,10 +62,13 @@ namespace Ommel {
         public bool LaunchNoitaAfterwards = true;
         public bool WriteAutoAPIConversion = false;
 
+        private bool CurrentlyStitchingMods;
+        private string LastStitchedMod;
         private StreamWriter LogFile;
 		private List<string> BackedUpFiles = new List<string>();
 		private List<string> AddedFiles = new List<string>();
 		private Dictionary<string, List<string>> ModEvents = new Dictionary<string, List<string>>();
+        private List<string> Errors;
 
 		public enum FileType {
 			PNG,
@@ -82,8 +90,13 @@ namespace Ommel {
 
 		public Ommel() {
             Logger.Subscribe((logger, loglevel, indent, str) => {
+                var log_str = logger.String(loglevel, str, indent);
                 if (LogFile != null) {
-                    LogFile.WriteLine(logger.String(loglevel, str, indent));
+                    LogFile.WriteLine(log_str);
+                }
+                if (loglevel == Logger.LogLevel.Error) {
+                    if (CurrentlyStitchingMods) log_str = $"[mod {LastStitchedMod}] {log_str}";
+                    Errors.Add(log_str);
                 }
             });
 		}
@@ -212,6 +225,8 @@ namespace Ommel {
 		private void StitchMod(Mod mod) {
 			Logger.Info($"Stitching mod: '{mod.Name}' ({mod.Ommeldata.Operations.Count} operation(s))");
 
+            LastStitchedMod = mod.DirName;
+
 			for (var i = 0; i < mod.Ommeldata.Operations.Count; i++) {
 				var op = mod.Ommeldata.Operations[i];
 
@@ -220,6 +235,7 @@ namespace Ommel {
 		}
 
 		private void StitchMods() {
+            CurrentlyStitchingMods = true;
 			if (Mods.Count == 0) Logger.Warn($"No valid mods found");
 			for (var i = 0; i < Mods.Count; i++) {
 				var mod = Mods[i];
@@ -232,6 +248,7 @@ namespace Ommel {
 					return;
 				}
 			}
+            CurrentlyStitchingMods = false;
 			WriteOmmelData();
 		}
 
@@ -356,6 +373,39 @@ namespace Ommel {
                 }
                 File.Delete(NoitaOmmelExtractInfoPath);
             }
+        }
+
+        private void ErrorMessageBox(string content) {
+            MessageBox.Show(content, "Ommel Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
+        private string GetLatestVersion() {
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+            string content = null;
+            using (var wc = new System.Net.WebClient()) {
+                wc.Headers.Add("User-Agent: request");
+                content = wc.DownloadString("https://api.github.com/repos/NoitaOmmel/Ommel/releases/latest");
+            }
+
+            var pat = new Regex("\"tag_name\":\"v(?<tag>[^\"]+)\"");
+            var match = pat.Match(content);
+            return match.Groups["tag"].Value;
+        }
+
+        private bool CheckIfOutdated() {
+            try {
+                var latest_ver = GetLatestVersion();
+                Logger.Debug($"Latest available Ommel version: {latest_ver}");
+                if (latest_ver != VERSION.Replace("-dev", "")) {
+                    if (MessageBox.Show($"You are running an outdated version of Ommel!\nOmmel will be able to update itself soon, but for the time being you will have to download the newest version yourself.\nPress \"OK\" to open the web page with the latest release.", "Ommel Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK) {
+                        Process.Start("https://github.com/NoitaOmmel/Ommel/releases/latest");
+                    }
+                    return true;
+                }
+            } catch (Exception e) {
+                Logger.Warn($"Failed obtaining latest release: {e}");
+            }
+            return false;
         }
 
         public string ProcessNewlines(string data) {
@@ -518,7 +568,7 @@ namespace Ommel {
             var proc_running = Process.Start(proc); 
             proc_running.WaitForExit();
             if (proc_running.ExitCode != 0) {
-                Logger.Error($"Failed launching Noita!");
+                throw new Exception($"Failed launching Noita!");
             }
 
         }
@@ -528,6 +578,7 @@ namespace Ommel {
                 LogFile.Dispose();
             };
 
+            Errors = new List<string>();
 
             Logger.Info($"OMMEL v{VERSION} STARTING");
 			Logger.Info($"Target: Noita {NOITA_VERSION}");
@@ -545,8 +596,10 @@ namespace Ommel {
             if (NoitaLaunchArgs == null) NoitaLaunchArgs = "";
 
             if (NoitaAppDataPath == null) {
-                NoitaAppDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "AppData", "LocalLow", "Nolla_Games_Noita"); 
+                SetAppdataPaths(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "AppData", "LocalLow", "Nolla_Games_Noita"));
             }
+
+            CheckIfOutdated();
 
             File.Delete(NoitaOmmelLogPath);
             LogFile = new StreamWriter(File.OpenWrite(NoitaOmmelLogPath));
@@ -560,7 +613,17 @@ namespace Ommel {
                 StitchMods();
                 WriteFileInfo();
                 LaunchNoita();
-            } finally {
+            } catch (Exception e) {
+                ErrorMessageBox($"Ommel encountered an error that caused it to terminate:\n{e.Message}");
+            }
+            finally {
+                if (Errors.Count > 0) {
+                    var s = new StringBuilder();
+                    for (var i = 0; i < Errors.Count; i++) {
+                        s.AppendLine(Errors[i]);
+                    }
+                    ErrorMessageBox($"Ommel has encountered at least one error while trying to stitch mods:\n{s.ToString()}");
+                }
                 LogFile.Dispose();
                 LogFile = null;
             }

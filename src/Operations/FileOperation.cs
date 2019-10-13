@@ -52,7 +52,7 @@ namespace Ommel {
         public string TargetFile {
             get {
                 if (_TargetFile == null) _TargetFile = SourceFile; 
-                return _TargetFile = _TargetFile.Replace(Ommel.MOD_ASSETS_NAME + Path.DirectorySeparatorChar, "data" + Path.DirectorySeparatorChar);
+                return _TargetFile = _TargetFile.Replace(Ommel.MOD_ASSETS_NAME + Path.DirectorySeparatorChar, "data/");
             }
             set { _TargetFile = value; }
         }

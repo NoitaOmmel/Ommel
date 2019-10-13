@@ -76,6 +76,7 @@ namespace Ommel {
                         continue;
                     }
                     var attribs = ((XmlElement)patch_node).Attributes;
+                    var skip_elem = false;
                     for (var j = 0; j < attribs.Count; j++) {
                         var attrib = attribs[j];
                         if (attrib.Name.StartsWith("MATCH_", StringComparison.InvariantCulture)) {
@@ -84,9 +85,14 @@ namespace Ommel {
                             if (((XmlElement)node).GetAttribute(real_attrib_name) != attrib.Value) {
                                 patch_offs -= 1;
                                 last_patch_idx -= 1;
-                                continue;
+                                skip_elem = true;
+                                break;
                             }
                         }
+                    }
+                    if (skip_elem) {
+                        x.AppendChild(d.ImportNode(node, true));
+                        continue;
                     }
                     var elem = (XmlElement)x.AppendChild(d.CreateElement(((XmlElement)node).Name));
                     MergeElement(d, elem, (XmlElement)node, (XmlElement)patch_node);

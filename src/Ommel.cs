@@ -545,7 +545,7 @@ namespace Ommel {
             if (NoitaLaunchArgs == null) NoitaLaunchArgs = "";
 
             if (NoitaAppDataPath == null) {
-                NoitaAppDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LocalLow", "Nolla_Games_Noita");
+                NoitaAppDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "AppData", "LocalLow", "Nolla_Games_Noita"); 
             }
 
             File.Delete(NoitaOmmelLogPath);

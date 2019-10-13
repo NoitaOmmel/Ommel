@@ -18,9 +18,9 @@ namespace Ommel {
 
 	public class Ommel {
 #if DEBUG
-        public const string VERSION = "0.1.3-dev";
+        public const string VERSION = "0.1.4-dev";
 #else
-        public const string VERSION = "0.1.3";
+        public const string VERSION = "0.1.4";
 #endif
         public const string NOITA_VERSION = "mods-beta 1+";
 		public const string MODS_FOLDER_NAME = "mods";

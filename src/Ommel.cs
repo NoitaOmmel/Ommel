@@ -29,6 +29,7 @@ namespace Ommel {
 		public const string MOD_ASSETS_NAME = "ommeldata";
 		public const string BACKUP_FOLDER_NAME = ".ommel-backup";
 		public const string BACKUP_FILE_INFO_NAME = ".ommel-files";
+        public const string OMMEL_LOG_NAME = "ommel-log.txt";
 
 		public static Logger Logger = new Logger("Ommel");
 
@@ -46,6 +47,7 @@ namespace Ommel {
 		public string NoitaOmmelStaticDataPath;
 		public string NoitaOmmelLibDataPath;
         public string NoitaOmmelExtractInfoPath;
+        public string NoitaOmmelLogPath;
         public string NoitaDataWakPath;
         public string NoitaLaunchExe;
         public string NoitaLaunchArgs;
@@ -54,7 +56,8 @@ namespace Ommel {
         public bool IgnoreModLoadOrder = false;
         public bool LaunchNoitaAfterwards = true;
         public bool WriteAutoAPIConversion = false;
-		
+
+        private StreamWriter LogFile;
 		private List<string> BackedUpFiles = new List<string>();
 		private List<string> AddedFiles = new List<string>();
 		private Dictionary<string, List<string>> ModEvents = new Dictionary<string, List<string>>();
@@ -78,6 +81,11 @@ namespace Ommel {
 		}
 
 		public Ommel() {
+            Logger.Subscribe((logger, loglevel, indent, str) => {
+                if (LogFile != null) {
+                    LogFile.WriteLine(logger.String(loglevel, str, indent));
+                }
+            });
 		}
 
 		private void SetGamePaths(string noita_path, string noita_appdata_path = null) {
@@ -99,6 +107,8 @@ namespace Ommel {
 
             NoitaOmmelExtractInfoPath = Path.Combine(NoitaPath, "data", "extractinfo.txt");
             NoitaDataWakPath = Path.Combine(NoitaPath, "data", "data.wak");
+
+            NoitaOmmelLogPath = Path.Combine(NoitaPath, OMMEL_LOG_NAME);
         }
 
         private void SetAppdataPaths(string noita_appdata_path) {
@@ -514,7 +524,12 @@ namespace Ommel {
         }
 
         public void Start() {
-			Logger.Info($"OMMEL v{VERSION} STARTING");
+            Console.CancelKeyPress += (sender, e) => {
+                LogFile.Dispose();
+            };
+
+
+            Logger.Info($"OMMEL v{VERSION} STARTING");
 			Logger.Info($"Target: Noita {NOITA_VERSION}");
 
             if (NoitaPath == null && NoitaLaunchExe != null) {
@@ -533,6 +548,9 @@ namespace Ommel {
                 NoitaAppDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LocalLow", "Nolla_Games_Noita");
             }
 
+            File.Delete(NoitaOmmelLogPath);
+            LogFile = new StreamWriter(File.OpenWrite(NoitaOmmelLogPath));
+
             CheckIfUpdated();
 			TryRestoreData();
 			VerifyPaths();
@@ -541,6 +559,9 @@ namespace Ommel {
 			StitchMods();
 			WriteFileInfo();
             LaunchNoita();
+
+            LogFile.Dispose();
+            LogFile = null;
 		}
 	}
 }

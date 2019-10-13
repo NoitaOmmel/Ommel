@@ -396,11 +396,11 @@ namespace Ommel {
 		}
 
         public bool IsModDataEntry(string path) {
-            return path.StartsWith(MOD_ASSETS_NAME + Path.DirectorySeparatorChar, StringComparison.InvariantCulture);
+            return path.StartsWith(MOD_ASSETS_NAME + "/", StringComparison.InvariantCulture);
         }
 
         public bool IsDataEntry(string path) {
-			return path.StartsWith("data" + Path.DirectorySeparatorChar, StringComparison.InvariantCulture);
+			return path.StartsWith("data/", StringComparison.InvariantCulture);
 		}
 
 		public void CheckDataEntry(string path) {
@@ -430,7 +430,7 @@ namespace Ommel {
 			if (Directory.Exists(path)) throw new Exception("Used BackupFile on a directory");
 			if (!File.Exists(path)) throw new FileNotFoundException($"Failed to backup file '{data_path}' - it doesn't exist");
 
-			var dirs = Path.GetDirectoryName(data_path).Split(Path.DirectorySeparatorChar);
+			var dirs = Path.GetDirectoryName(data_path).Split('/');
 			string cur_path = NoitaOmmelBackupPath;
 			for (var i = 0; i < dirs.Length; i++) {
 				var dir = dirs[i];

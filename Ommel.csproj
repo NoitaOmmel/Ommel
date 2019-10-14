@@ -111,6 +111,10 @@
       <Project>{5BCB12EE-8E81-462A-83FE-6B5FDFBB0C09}</Project>
       <Name>UpdateTool</Name>
     </ProjectReference>
+    <ProjectReference Include="libs\html-agility-pack\src\HtmlAgilityPack.Net45\HtmlAgilityPack.Net45.csproj">
+      <Project>{8DCFDE1C-263F-41D4-B518-9B7EE06F7D52}</Project>
+      <Name>HtmlAgilityPack.Net45</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="res\ommelrt.lua">

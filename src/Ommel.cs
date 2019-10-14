@@ -23,9 +23,9 @@ namespace Ommel {
 
 	public class Ommel {
 #if DEBUG
-        public const string VERSION = "0.1.8-dev";
+        public const string VERSION = "0.1.9-dev";
 #else
-        public const string VERSION = "0.1.8";
+        public const string VERSION = "0.1.9";
 #endif
         public const string NOITA_VERSION = "mods-beta 1+";
 		public const string MODS_FOLDER_NAME = "mods";
@@ -163,7 +163,7 @@ namespace Ommel {
                 }
 
                 var metadata = new XMLModMetadata();
-                using (var f = File.OpenRead(metadata_path)) {
+                using (var f = XmlReader.Create(File.OpenRead(metadata_path), new XmlReaderSettings { CheckCharacters = false })) {
                     var doc = new XmlDocument();
                     doc.Load(f);
                     if (doc.ChildNodes.Count < 1) metadata = null;
@@ -177,7 +177,7 @@ namespace Ommel {
                 if (metadata.Name == null) metadata.Name = "Unknown";
 
                 var ommeldata = new XMLOmmelMetadata();
-                using (var f = File.OpenRead(ommeldata_path)) {
+                using (var f = XmlReader.Create(File.OpenRead(ommeldata_path), new XmlReaderSettings { CheckCharacters = false })) {
                     var doc = new XmlDocument();
                     doc.Load(f);
                     if (doc.ChildNodes.Count < 1) ommeldata = null;
@@ -341,7 +341,7 @@ namespace Ommel {
                 return conf;
             }
             var doc = new XmlDocument();
-            using (var xr = XmlReader.Create(File.OpenRead(NoitaSaveConfigPath))) {
+            using (var xr = XmlReader.Create(File.OpenRead(NoitaSaveConfigPath), new XmlReaderSettings { CheckCharacters = false })) {
                 doc.Load(xr);
             }
             conf.FillIn(doc.ChildNodes[0] as XmlElement);
@@ -418,11 +418,12 @@ namespace Ommel {
             var proc = new ProcessStartInfo();
             proc.UseShellExecute = false;
             proc.Arguments = "";
+            var update_tool_path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "UpdateTool.exe");
             if (Environment.OSVersion.Platform.HasFlag(PlatformID.Unix)) {
                 proc.FileName = "mono";
-                proc.Arguments += "\"UpdateTool.exe\" ";
+                proc.Arguments += $"\"{update_tool_path}\" ";
             } else {
-                proc.FileName = "UpdateTool.exe";
+                proc.FileName = update_tool_path;
             }
 
             var files = new StringBuilder();
@@ -451,7 +452,7 @@ namespace Ommel {
             try {
                 var latest_ver = GetLatestVersion();
                 Logger.Debug($"Latest available Ommel version: {latest_ver}");
-                if (latest_ver != VERSION.Replace("-dev", "") + "a") {
+                if (latest_ver != VERSION.Replace("-dev", "")) {
                     Logger.Debug($"Ommel is out of date");
                     if (MessageBox.Show($"Ommel v{latest_ver} is now available!\nIf you press \"OK\", the program will download and install the update automatically.\nYou will have to start the game again to run the new version.", "Ommel Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK) {
                         var url = $"https://github.com/NoitaOmmel/Ommel/releases/download/v{latest_ver}/Ommel-v{latest_ver}.zip";

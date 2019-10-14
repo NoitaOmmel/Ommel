@@ -2,49 +2,79 @@
 using System.IO;
 using System.Text;
 using System.Xml;
+using HtmlAgilityPack;
 
 namespace Ommel {
     public class XMLMerger {
-        public XmlDocument Patch;
-        public XmlDocument Target;
+        /*
+         * This used to be a lot more sensible until I noticed how messed up
+         * the XMLs in the game are. Therefore, I present to you - the
+         * kinda-XHTML/HTML+XML merger that reads in XML files as HTML, merges
+         * them with XML files and writes the result as XML. Lord forgive me.
+         */       
 
-        public XMLMerger(XmlDocument patch, XmlDocument target) {
+        public XmlDocument Patch;
+        public HtmlDocument Target;
+
+        public XMLMerger(XmlDocument patch, HtmlDocument target) {
             Patch = patch;
             Target = target;
         }
 
         public XMLMerger(TextReader patch, TextReader target) {
             Patch = new XmlDocument();
-            Target = new XmlDocument();
+            Target = new HtmlDocument();
 
             Target.Load(target);
-            Patch.Load(patch);
+
+
+            using (var xr = XmlReader.Create(patch, new XmlReaderSettings { CheckCharacters = false })) {
+                 Patch.Load(xr);
+            }
         }
 
         public XMLMerger(string patch, string target) {
             Patch = new XmlDocument();
-            Target = new XmlDocument();
+            Target = new HtmlDocument();
 
             using (var w = new StringReader(patch)) {
-                using (var xr = XmlReader.Create(w)) {
+                using (var xr = XmlReader.Create(w, new XmlReaderSettings { CheckCharacters = false })) {
                     Patch.Load(xr);
                 }
             }
 
             using (var w = new StringReader(target)) {
-                using (var xr = XmlReader.Create(w)) {
-                    Target.Load(xr);
-                }
+                Target.Load(target);
             }
         }
 
-        protected void MergeElement(XmlDocument d, XmlElement x, XmlElement a, XmlElement b) {
+        protected XmlNode HTMLNodeToXMLElement(XmlDocument doc, HtmlNode node) {
+            if (node is HtmlTextNode) {
+                var xtext = doc.CreateTextNode(node.InnerText);
+                return xtext;
+            }
+
+            var xnode = doc.CreateElement(node.Name);
+            for (var i = 0; i < node.Attributes.Count; i++) {
+                var attrib = node.Attributes[i];
+                attrib.UseOriginalName = true;
+                xnode.SetAttribute(attrib.Name, attrib.Value);
+            }
+            for (var i = 0; i < node.ChildNodes.Count; i++) {
+                var child = node.ChildNodes[i];
+                xnode.AppendChild(HTMLNodeToXMLElement(doc, child));
+            }
+            return xnode;
+        }
+
+        protected void MergeElement(XmlDocument d, XmlElement x, HtmlNode a, XmlElement b) {
             for (var i = 0; i < a.Attributes.Count; i++) {
+                a.Attributes[i].UseOriginalName = true;
                 x.SetAttribute(a.Attributes[i].Name, a.Attributes[i].Value);
             }
 
             for (var i = 0; i < b.Attributes.Count; i++) {
-                x.SetAttribute(b.Attributes[i].Name, b.Attributes[i].Value);
+                 x.SetAttribute(b.Attributes[i].Name, b.Attributes[i].Value);
             }
 
             var patch_offs = 0;
@@ -71,7 +101,7 @@ namespace Ommel {
                 } else last_patch_idx += 1;
                 last_target_idx += 1;
 
-                if (node is XmlElement && node.Name == patch_node.Name) {
+                if (node is HtmlNode && node.Name == patch_node.Name) {
                     if (((XmlElement)patch_node).HasAttribute("DELETE")) {
                         continue;
                     }
@@ -82,7 +112,7 @@ namespace Ommel {
                         if (attrib.Name.StartsWith("MATCH_", StringComparison.InvariantCulture)) {
                             var real_attrib_name = attrib.Name.Substring("MATCH_".Length);
 
-                            if (((XmlElement)node).GetAttribute(real_attrib_name) != attrib.Value) {
+                            if (node.GetAttributeValue(real_attrib_name, null) != attrib.Value) {
                                 patch_offs -= 1;
                                 last_patch_idx -= 1;
                                 skip_elem = true;
@@ -91,11 +121,11 @@ namespace Ommel {
                         }
                     }
                     if (skip_elem) {
-                        x.AppendChild(d.ImportNode(node, true));
+                        x.AppendChild(HTMLNodeToXMLElement(d, node));
                         continue;
                     }
-                    var elem = (XmlElement)x.AppendChild(d.CreateElement(((XmlElement)node).Name));
-                    MergeElement(d, elem, (XmlElement)node, (XmlElement)patch_node);
+                    var elem = (XmlElement)x.AppendChild(d.CreateElement(node.Name));
+                    MergeElement(d, elem, node, (XmlElement)patch_node);
                     for (var j = 0; j < attribs.Count; j++) {
                         var attrib = attribs[j];
                         if (attrib.Name.StartsWith("MATCH_", StringComparison.InvariantCulture)) {
@@ -105,12 +135,12 @@ namespace Ommel {
                     x.AppendChild(elem);
                 }
                 else {
-                    x.AppendChild(d.ImportNode(node, true));
+                    x.AppendChild(HTMLNodeToXMLElement(d, node));
                 }
             }
 
             for (var i = last_target_idx; i < a.ChildNodes.Count; i++) {
-                x.AppendChild(d.ImportNode(a.ChildNodes[i], true));
+                x.AppendChild(HTMLNodeToXMLElement(d, a.ChildNodes[i]));
             }
 
             for (var i = last_patch_idx; i < b.ChildNodes.Count; i++) {
@@ -123,11 +153,13 @@ namespace Ommel {
         public XmlDocument CreateMergedDocument() {
             var doc = new XmlDocument();
 
-            if (Target.ChildNodes.Count == 0) throw new Exception("Target must have at least a root");
+
+
+            if (Target.DocumentNode.ChildNodes.Count == 0) throw new Exception("Target must have at least a root");
             if (Patch.ChildNodes.Count == 0) return doc;
 
-            var root_elem = doc.CreateElement(Target.ChildNodes[0].Name);
-            MergeElement(doc, root_elem, (XmlElement)Target.ChildNodes[0], (XmlElement)Patch.ChildNodes[0]);
+            var root_elem = doc.CreateElement(Target.DocumentNode.ChildNodes[0].Name);
+            MergeElement(doc, root_elem, Target.DocumentNode.ChildNodes[0], (XmlElement)Patch.ChildNodes[0]);
             doc.AppendChild(root_elem);
 
             return doc;

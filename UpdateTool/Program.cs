@@ -52,15 +52,12 @@ namespace UpdateTool {
             }
 
             ZipFile.ExtractToDirectory(tmp_zip_path, tmp_extract_path);
-            
-            for (var i = 0; i < FilesToCopy.Count; i++) {
-                var file = FilesToCopy[i];
-                var extract_path = Path.Combine(tmp_extract_path, file);
-                var target_path = Path.Combine(TargetDir, file);
-                if (!File.Exists(extract_path)) {
-                    Logger.Warn($"Skipping file '{file}' because it doesn't exist in the .zip");
-                    continue;
-                }
+
+            var files = Directory.GetFiles(tmp_extract_path);
+
+            for (var i = 0; i < files.Length; i++) {
+                var extract_path = files[i];
+                var target_path = Path.Combine(TargetDir, Path.GetFileName(extract_path));
 
                 // wtf windows? moving a used file is A-OK but deleting it is bad
                 var bkp_path = target_path + ".bkp";

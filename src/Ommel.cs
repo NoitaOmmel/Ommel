@@ -16,16 +16,16 @@ namespace Ommel {
 		public static void Main(string[] args) {
 			var loader = new Ommel();
 			loader.InterpretArgs(args);
-			loader.Start();
+			loader.Start(args);
 			return;
 		}
 	}
 
 	public class Ommel {
 #if DEBUG
-        public const string VERSION = "0.1.7-dev";
+        public const string VERSION = "0.1.8-dev";
 #else
-        public const string VERSION = "0.1.7";
+        public const string VERSION = "0.1.8";
 #endif
         public const string NOITA_VERSION = "mods-beta 1+";
 		public const string MODS_FOLDER_NAME = "mods";
@@ -35,8 +35,19 @@ namespace Ommel {
 		public const string BACKUP_FOLDER_NAME = ".ommel-backup";
 		public const string BACKUP_FILE_INFO_NAME = ".ommel-files";
         public const string OMMEL_LOG_NAME = "ommel-log.txt";
+        public static readonly string[] OMMEL_FILES = {
+            "Irony.dll",
+            "Irony.xml",
+            "Logger.dll",
+            "Logger.pdb",
+            "NetLua.dll",
+            "NetLua.pdb",
+            "Ommel.exe",
+            "Ommel.pdb",
+        };
 
-		public static Logger Logger = new Logger("Ommel");
+
+        public static Logger Logger = new Logger("Ommel");
 
 		static Ommel() {
             Logger.MaxLogLevel = Logger.LogLevel.Debug;
@@ -135,58 +146,63 @@ namespace Ommel {
         }
 
 		private void LoadMod(string path) {
-			var filename = Path.GetFileName(path);
+            try {
 
-			var metadata_path = Path.Combine(path, MOD_METADATA_NAME);
-			if (!File.Exists(metadata_path)) {
-				Logger.Warn($"Ignoring mod entry '{filename}' (missing {MOD_METADATA_NAME})");
-				return;
-			}
+                var filename = Path.GetFileName(path);
 
-            var ommeldata_path = Path.Combine(path, MOD_OMMELDATA_NAME);
-            if (!File.Exists(ommeldata_path)) {
-                Logger.Warn($"Ignoring mod entry '{filename}' (missing {MOD_OMMELDATA_NAME})");
-                return;
+                var metadata_path = Path.Combine(path, MOD_METADATA_NAME);
+                if (!File.Exists(metadata_path)) {
+                    Logger.Warn($"Ignoring mod entry '{filename}' (missing {MOD_METADATA_NAME})");
+                    return;
+                }
+
+                var ommeldata_path = Path.Combine(path, MOD_OMMELDATA_NAME);
+                if (!File.Exists(ommeldata_path)) {
+                    Logger.Warn($"Ignoring mod entry '{filename}' (missing {MOD_OMMELDATA_NAME})");
+                    return;
+                }
+
+                var metadata = new XMLModMetadata();
+                using (var f = File.OpenRead(metadata_path)) {
+                    var doc = new XmlDocument();
+                    doc.Load(f);
+                    if (doc.ChildNodes.Count < 1) metadata = null;
+                    else metadata.FillIn(doc.ChildNodes[0] as XmlElement);
+                }
+                if (metadata == null) {
+                    Logger.Error($"Ignoring mod entry '{filename}' (failed to load metadata)");
+                    return;
+                }
+
+                if (metadata.Name == null) metadata.Name = "Unknown";
+
+                var ommeldata = new XMLOmmelMetadata();
+                using (var f = File.OpenRead(ommeldata_path)) {
+                    var doc = new XmlDocument();
+                    doc.Load(f);
+                    if (doc.ChildNodes.Count < 1) ommeldata = null;
+                    else ommeldata.FillIn(doc.ChildNodes[0] as XmlElement);
+                }
+                if (ommeldata == null) {
+                    Logger.Error($"Ignoring mod entry '{filename}' (failed to load ommeldata)");
+                    return;
+                }
+
+                if (metadata.Name == null) metadata.Name = "Unknown";
+
+
+                if (ommeldata.Operations == null) {
+                    Logger.Error($"Ignoring mod entry '{filename}' (no file operations defined)");
+                    return;
+                }
+
+                Logger.Info($"Found valid mod: '{metadata.Name}'");
+
+                Mods.Add(new Mod(metadata, ommeldata, path));
+            } catch (Exception e) {
+                Logger.Error($"Failed loading mod '{Path.GetFileName(path)}': {e.Message}");
             }
-
-            var metadata = new XMLModMetadata();
-			using (var f = File.OpenRead(metadata_path)) {
-                var doc = new XmlDocument();
-                doc.Load(f);
-                if (doc.ChildNodes.Count < 1) metadata = null;
-                else metadata.FillIn(doc.ChildNodes[0] as XmlElement);
-			}
-			if (metadata == null) {
-				Logger.Error($"Ignoring mod entry '{filename}' (failed to load metadata)");
-				return;
-			}
-
-			if (metadata.Name == null) metadata.Name = "Unknown";
-
-            var ommeldata = new XMLOmmelMetadata();
-            using (var f = File.OpenRead(ommeldata_path)) {
-                var doc = new XmlDocument();
-                doc.Load(f);
-                if (doc.ChildNodes.Count < 1) ommeldata = null;
-                else ommeldata.FillIn(doc.ChildNodes[0] as XmlElement);
-            }
-            if (ommeldata == null) {
-                Logger.Error($"Ignoring mod entry '{filename}' (failed to load ommeldata)");
-                return;
-            }
-
-            if (metadata.Name == null) metadata.Name = "Unknown";
-
-
-            if (ommeldata.Operations == null) {
-				Logger.Error($"Ignoring mod entry '{filename}' (no file operations defined)");
-				return;
-			}
-
-			Logger.Info($"Found valid mod: '{metadata.Name}'");
-
-			Mods.Add(new Mod(metadata, ommeldata, path));
-		}
+        }
 
 		private void LoadMods() {
 			Mods = new List<Mod>();
@@ -392,13 +408,54 @@ namespace Ommel {
             return match.Groups["tag"].Value;
         }
 
-        private bool CheckIfOutdated() {
+        private string EscapeArgument(string arg) {
+            return arg.Replace("\\", "\\\\").Replace("\"", "\\\"");
+        }
+
+        private void RunAutoUpdate(string[] cmd_args, string url) {
+            Logger.Debug($"Starting UpdateTool");
+
+            var proc = new ProcessStartInfo();
+            proc.UseShellExecute = false;
+            proc.Arguments = "";
+            if (Environment.OSVersion.Platform.HasFlag(PlatformID.Unix)) {
+                proc.FileName = "mono";
+                proc.Arguments += "\"UpdateTool.exe\" ";
+            } else {
+                proc.FileName = "UpdateTool.exe";
+            }
+
+            var files = new StringBuilder();
+            for (var i = 0; i < OMMEL_FILES.Length; i++) {
+                files.Append($"-file \"{OMMEL_FILES[i]}\" ");
+            }
+
+            
+            var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var args = $"-url \"{url}\" -dir \"{dir}\" {files.ToString()}";
+
+            Logger.Debug($"Arguments: {args}");
+
+            proc.Arguments += args;
+            var running_proc = Process.Start(proc);
+            running_proc.WaitForExit();
+            if (running_proc.ExitCode == 0) {
+                MessageBox.Show("The update was a success! Launch Ommel again to use it.", "Ommel Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            } else {
+                throw new Exception("Failed auto-updating");
+            }
+            Environment.Exit(0);
+        }
+
+        private bool CheckIfOutdated(string[] cmd_args) {
             try {
                 var latest_ver = GetLatestVersion();
                 Logger.Debug($"Latest available Ommel version: {latest_ver}");
-                if (latest_ver != VERSION.Replace("-dev", "")) {
-                    if (MessageBox.Show($"You are running an outdated version of Ommel!\nOmmel will be able to update itself soon, but for the time being you will have to download the newest version yourself.\nPress \"OK\" to open the web page with the latest release.", "Ommel Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK) {
-                        Process.Start("https://github.com/NoitaOmmel/Ommel/releases/latest");
+                if (latest_ver != VERSION.Replace("-dev", "") + "a") {
+                    Logger.Debug($"Ommel is out of date");
+                    if (MessageBox.Show($"Ommel v{latest_ver} is now available!\nIf you press \"OK\", the program will download and install the update automatically.\nYou will have to start the game again to run the new version.", "Ommel Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK) {
+                        var url = $"https://github.com/NoitaOmmel/Ommel/releases/download/v{latest_ver}/Ommel-v{latest_ver}.zip";
+                        RunAutoUpdate(cmd_args, url);
                     }
                     return true;
                 }
@@ -563,8 +620,10 @@ namespace Ommel {
             Logger.Info($"Starting Noita");
             var proc = new ProcessStartInfo();
             proc.UseShellExecute = true;
+            proc.WorkingDirectory = NoitaPath;
             proc.FileName = NoitaLaunchExe;
             proc.Arguments = NoitaLaunchArgs;
+            Logger.Debug($"Exe: '{NoitaLaunchExe}' Arguments: '{NoitaLaunchArgs}'");
             var proc_running = Process.Start(proc); 
             proc_running.WaitForExit();
             if (proc_running.ExitCode != 0) {
@@ -573,9 +632,9 @@ namespace Ommel {
 
         }
 
-        public void Start() {
+        public void Start(string[] cmd_args) {
             Console.CancelKeyPress += (sender, e) => {
-                LogFile.Dispose();
+                if (LogFile != null) LogFile.Dispose();
             };
 
             Errors = new List<string>();
@@ -589,7 +648,7 @@ namespace Ommel {
                 }
             }
 
-            if (NoitaLaunchExe == null) {
+            if (NoitaLaunchExe == null && NoitaPath != null) {
                 NoitaLaunchExe = Path.Combine(NoitaPath, "noita.exe");
             }
 
@@ -599,7 +658,7 @@ namespace Ommel {
                 SetAppdataPaths(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "AppData", "LocalLow", "Nolla_Games_Noita"));
             }
 
-            CheckIfOutdated();
+            CheckIfOutdated(cmd_args);
 
             File.Delete(NoitaOmmelLogPath);
             LogFile = new StreamWriter(File.OpenWrite(NoitaOmmelLogPath));

@@ -107,6 +107,10 @@
       <Project>{6B52EB11-E6A7-4771-94B0-7F87EA28211D}</Project>
       <Name>NetLua</Name>
     </ProjectReference>
+    <ProjectReference Include="UpdateTool\UpdateTool.csproj">
+      <Project>{5BCB12EE-8E81-462A-83FE-6B5FDFBB0C09}</Project>
+      <Name>UpdateTool</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="res\ommelrt.lua">

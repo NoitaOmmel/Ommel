@@ -58,13 +58,14 @@ namespace Ommel {
             set { _TargetFile = value; }
         }
 
-        public FileOperation() { Logger.MaxLogLevel = Logger.LogLevel.Debug;  }
+        public FileOperation() { }
         public FileOperation(string key) : this() { SetKey(key); }
 
         public void SetKey(string key) {
             Key = key;
 			Logger = new Logger($"Operation {Key}");
-		}
+            Logger.MaxLogLevel = Logger.LogLevel.Debug;
+        }
 
 		protected bool IsBlacklisted(Ommel.FileType type) {
 			return (WhitelistedFileTypes.Count > 0 && !WhitelistedFileTypes.Contains(type)) || BlacklistedFileTypes.Contains(type);

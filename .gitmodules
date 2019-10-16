@@ -6,4 +6,4 @@
 	url = https://github.com/NoitaOmmel/NetLua
 [submodule "libs/html-agility-pack"]
 	path = libs/html-agility-pack
-	url = https://github.com/zzzprojects/html-agility-pack/
+	url = https://github.com/NoitaOmmel/htmlagilitypack/

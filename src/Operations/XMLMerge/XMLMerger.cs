@@ -49,9 +49,16 @@ namespace Ommel {
         }
 
         protected XmlNode HTMLNodeToXMLElement(XmlDocument doc, HtmlNode node) {
-            if (node is HtmlTextNode) {
+            if (node.NodeType == HtmlNodeType.Text) {
                 var xtext = doc.CreateTextNode(node.InnerText);
                 return xtext;
+            }
+            if (node.NodeType == HtmlNodeType.Comment) {
+                var text = ((HtmlCommentNode)node).Comment;
+                // why, HTMLAgilityPack? why?
+                text = text.Substring("<!--".Length, text.Length - "<!--".Length - "-->".Length);
+                var xcomment = doc.CreateComment(text);
+                return xcomment;
             }
 
             var xnode = doc.CreateElement(node.Name);
@@ -101,7 +108,12 @@ namespace Ommel {
                 } else last_patch_idx += 1;
                 last_target_idx += 1;
 
-                if (node is HtmlNode && node.Name == patch_node.Name) {
+                if (node.Name == patch_node.Name) {
+                    if (node.NodeType != HtmlNodeType.Element) {
+                        x.AppendChild(d.ImportNode(patch_node, true));
+                        continue;
+                    }
+
                     if (((XmlElement)patch_node).HasAttribute("DELETE")) {
                         continue;
                     }
@@ -145,7 +157,7 @@ namespace Ommel {
 
             for (var i = last_patch_idx; i < b.ChildNodes.Count; i++) {
                 if (b.ChildNodes[i].Name == "APPEND") continue;
-                if (b is XmlElement && ((XmlElement)b.ChildNodes[i]).HasAttribute("DELETE")) continue;
+                if (b is XmlElement && b.ChildNodes[i] is XmlElement && ((XmlElement)b.ChildNodes[i]).HasAttribute("DELETE")) continue;
                 x.AppendChild(d.ImportNode(b.ChildNodes[i], true));
             }
         }

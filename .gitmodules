@@ -3,7 +3,7 @@
 	url = https://github.com/modthegungeon/Logger
 [submodule "libs/NetLua"]
 	path = libs/NetLua
-	url = https://github.com/frabert/NetLua
+	url = https://github.com/NoitaOmmel/NetLua
 [submodule "libs/html-agility-pack"]
 	path = libs/html-agility-pack
 	url = https://github.com/zzzprojects/html-agility-pack/

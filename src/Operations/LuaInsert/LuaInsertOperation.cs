@@ -33,10 +33,9 @@ namespace Ommel {
 
         public override void OnExecute(Ommel loader, Mod mod) {
 			loader.RegisterModifiedFile(TargetFile);
-			var target_path = loader.GetNoitaAssetPath(TargetFile);
 			var source_path = mod.GetFile(SourceFile);
 
-			var parsed_script = LuaParser.ParseFile(target_path);
+            var parsed_script = LuaParser.ParseFile(loader.ExpandTargetPathDefaulted(TargetFile));
 			if (parsed_script == null) throw new Exception($"Failed parsing '{TargetFile}'");
 			var ast_search = new ASTSearchWalker();
 			ast_search.Match(LuaInsertTarget, parsed_script);
@@ -46,21 +45,21 @@ namespace Ommel {
 			var offset = ast_search.SelectedSpan.Value.Location.Position;
 
 			string s;
-			using (var target_file = new StreamReader(File.OpenRead(target_path))) {
-				using (var source_file = new StreamReader(File.OpenRead(source_path))) {
-					s = InsertAtPos(target_file, offset, source_file, Trim);
-				}
-			}
+            using (var target_file = new StreamReader(File.OpenRead(loader.ExpandTargetPathDefaulted(TargetFile)))) {
+                using (var source_file = new StreamReader(File.OpenRead(source_path))) {
+                    s = InsertAtPos(target_file, offset, source_file, Trim);
+                }
+            }
 
-			File.Delete(target_path);
+			loader.DeleteFile(TargetFile);
 
-			using (var output = new StreamWriter(File.OpenWrite(target_path))) {
+			using (var output = new StreamWriter(loader.OpenWriteTarget(TargetFile))) {
 				output.Write(loader.ProcessNewlines(s.ToString()));
 			}
 
 			if (loader.ExtraChecks) {
 				Logger.Debug($"Checking result to see if it's still valid");
-				var parsed_new_script = LuaParser.ParseFile(target_path);
+				var parsed_new_script = LuaParser.ParseFile(loader.ExpandTargetPath(TargetFile));
 				if (parsed_new_script == null) Logger.Warn($"Insertion broke Lua script");
 				else {
 					var test_ast_search = new ASTSearchWalker();
@@ -70,7 +69,7 @@ namespace Ommel {
 				}
 			}
 
-            DoReplaceIfRequested(mod, target_path);
+            DoReplaceIfRequested(mod, loader, TargetFile);
 		}
 	}
 }

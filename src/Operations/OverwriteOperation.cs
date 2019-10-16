@@ -11,12 +11,11 @@ namespace Ommel {
 
 		public override void OnExecute(Ommel loader, Mod mod) {
 			loader.RegisterModifiedFile(TargetFile);
-			var target_path = loader.GetNoitaAssetPath(TargetFile);
 
-			File.Delete(target_path);
-			File.Copy(mod.GetFile(SourceFile), target_path);
+			loader.DeleteFile(TargetFile);
+			loader.CopyFile(mod, SourceFile, TargetFile);
 
-            DoReplaceIfRequested(mod, target_path);
+            DoReplaceIfRequested(mod, loader, TargetFile);
         }
 	}
 }

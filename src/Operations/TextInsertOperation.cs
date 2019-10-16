@@ -31,7 +31,6 @@ namespace Ommel {
 			if (param_counter > 1) throw new Exception("Too many parameters given to TextInsert - choose either 'Line' or 'Offset'");
 
 			loader.RegisterModifiedFile(TargetFile);
-			var target_path = loader.GetNoitaAssetPath(TargetFile);
 			var source_path = mod.GetFile(SourceFile);
 
 			StringBuilder s = new StringBuilder();
@@ -52,7 +51,7 @@ namespace Ommel {
 			}
 
 			if (Offset != null) {
-				using (var target_file = new StreamReader(File.OpenRead(target_path))) {
+				using (var target_file = new StreamReader(File.OpenRead(loader.ExpandTargetPathDefaulted(TargetFile)))) {
 					var target_pre_data = new char[Offset.Value];
 					target_file.Read(target_pre_data, 0, Offset.Value);
 					s.Append(target_pre_data);
@@ -60,7 +59,7 @@ namespace Ommel {
 					s.Append(target_file.ReadToEnd());
 				}
 			} else if (Line != null) {
-				using (var target_file = new StreamReader(File.OpenRead(target_path))) {
+				using (var target_file = new StreamReader(File.OpenRead(loader.ExpandTargetPathDefaulted(TargetFile)))) {
 					var line_idx = 1;
 					while (!target_file.EndOfStream) {
 						if (line_idx == Line.Value) s.Append(data_to_be_inserted);
@@ -70,9 +69,9 @@ namespace Ommel {
 				}
 			}
 
-			File.Delete(target_path);
+			loader.DeleteFile(TargetFile);
 
-			using (var output = new StreamWriter(File.OpenWrite(target_path))) {
+			using (var output = new StreamWriter(loader.OpenWriteTarget(TargetFile))) {
 				output.Write(loader.ProcessNewlines(s.ToString()));
 			}
 		}

@@ -52,7 +52,7 @@ namespace Ommel {
         public string TargetFile {
             get {
                 if (_TargetFile == null) _TargetFile = SourceFile; 
-                return _TargetFile = _TargetFile.Replace(Ommel.MOD_ASSETS_NAME + Path.DirectorySeparatorChar, "data/");
+                return _TargetFile = _TargetFile.Replace(Ommel.MOD_ASSETS_NAME + "/", "data/");
             }
             set { _TargetFile = value; }
         }
@@ -89,7 +89,7 @@ namespace Ommel {
 			return s.ToString();
 		}
 
-        protected void DoReplaceIfRequested(Mod mod, string path) {
+        protected void DoReplaceIfRequested(Mod mod, Ommel loader, string target_path) {
             if (Placeholders == null) return;
             if (Placeholders != null && PlaceholderFile == null) {
                 Logger.Warn($"File operation requested to use placeholders, but did not specify where the placeholder file is");
@@ -101,7 +101,7 @@ namespace Ommel {
                 return;
             }
 
-            if (Placeholders != null) mod.ReplaceStringsInFile(string_map, Placeholders.ToArray(), mod.Ommeldata.PlaceholderPrefix, mod.Ommeldata.PlaceholderSuffix, path);
+            if (Placeholders != null) mod.ReplaceStringsInFile(string_map, Placeholders.ToArray(), mod.Ommeldata.PlaceholderPrefix, mod.Ommeldata.PlaceholderSuffix, loader.ExpandTargetPath(target_path));
         }
 
         public void Execute(Ommel loader, Mod mod) {

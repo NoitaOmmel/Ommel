@@ -33,18 +33,16 @@ namespace Ommel {
 
 			if (Event == "init") TargetFile = "data/scripts/perks/perk_list.lua"; // lua entry point
 
-			var target_path = loader.GetNoitaAssetPath(TargetFile);
-			if (!File.Exists(target_path)) throw new Exception("Target file doesn't exist");
+			if (!loader.FileExists(TargetFile)) throw new Exception("Target file doesn't exist");
 
 			var event_files = loader.TryGetLuaModEvent(Event);
             var mod_source_file = mod.GetFile(SourceFile);
-			var mod_target_file = loader.GetNoitaAssetPath(SourceFile);
 			if (event_files == null) {
 				loader.RegisterModifiedFile(TargetFile);
 				event_files = loader.RegisterLuaModEvent(Event);
 
 				var lua_parser = new NetLua.Parser();
-				var block = lua_parser.ParseFile(target_path);
+				var block = lua_parser.ParseFile(loader.ExpandTargetPathDefaulted(TargetFile));
 				NetLua.Ast.IStatement first_non_dofile = null;
 				int offset = 0;
 
@@ -78,24 +76,25 @@ namespace Ommel {
 
 				string new_target_content = null;
 
-				using (var target_file = new StreamReader(target_path)) {
+				using (var target_file = new StreamReader(loader.ExpandTargetPathDefaulted(TargetFile))) {
 					using (var source_file = new StringReader(event_caller.ToString())) {
 						new_target_content = InsertAtPos(target_file, offset, source_file, false);
 					}
 				}
 
-				File.Delete(target_path);
-				using (var f = new StreamWriter(File.OpenWrite(target_path))) {
-					f.Write(new_target_content);
-				}
+				loader.DeleteFile(TargetFile);
+                using (var f = new StreamWriter(loader.OpenWriteTarget(TargetFile))) {
+                    f.Write(new_target_content);
+                }
 			}
 
             event_files.Add(SourceFile);
-            loader.RegisterNewFile(SourceFile);
-            File.Delete(mod_target_file);
-            File.Copy(mod_source_file, mod_target_file);
 
-            DoReplaceIfRequested(mod, mod_target_file);
+            loader.RegisterNewFile(SourceFile);
+            loader.DeleteFile(SourceFile);
+            loader.CopyFile(mod, SourceFile, SourceFile);
+
+            DoReplaceIfRequested(mod, loader, TargetFile);
 		}
 
         public override void ConvertToNoitaAPI(Mod mod, StreamWriter writer) {

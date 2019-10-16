@@ -88,13 +88,15 @@ namespace Ommel {
                 }
 			}
 
-            event_files.Add(SourceFile);
+            var target_source_file = loader.ConvertOmmeldataPath(SourceFile);
 
-            loader.RegisterNewFile(SourceFile);
-            loader.DeleteFile(SourceFile);
-            loader.CopyFile(mod, SourceFile, SourceFile);
+            event_files.Add(target_source_file);
 
-            DoReplaceIfRequested(mod, loader, TargetFile);
+            loader.RegisterNewFile(target_source_file);
+            loader.DeleteFile(target_source_file);
+            loader.CopyFile(mod, SourceFile, target_source_file);
+
+            DoReplaceIfRequested(mod, loader, target_source_file);
 		}
 
         public override void ConvertToNoitaAPI(Mod mod, StreamWriter writer) {

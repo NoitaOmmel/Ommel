@@ -641,7 +641,11 @@ namespace Ommel {
             if (!IsModDataEntry(path)) throw new Exception($"'{path}' isn't a valid ommeldata/ path");
         }
 
-		public void RegisterNewFile(string path) {
+        public string ConvertOmmeldataPath(string path) {
+            return path.Replace(MOD_ASSETS_NAME + "/", "data/");
+        }
+
+        public void RegisterNewFile(string path) {
 			CheckDataEntry(path);
             if (GenerateCompatMod) return;
 

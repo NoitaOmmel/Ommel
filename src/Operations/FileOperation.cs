@@ -32,7 +32,8 @@ namespace Ommel {
             AddFileOperation("Copy", typeof(CopyOperation));
             AddFileOperation("LuaEvent", typeof(LuaEventOperation));
             AddFileOperation("XMLMerge", typeof(XMLMergeOperation));
-		}
+            AddFileOperation("MergeLocalization", typeof(MergeLocalizationOperation));
+        }
 
 		public HashSet<Ommel.FileType> BlacklistedFileTypes = new HashSet<Ommel.FileType>();
 		public HashSet<Ommel.FileType> WhitelistedFileTypes = new HashSet<Ommel.FileType>();
@@ -57,8 +58,8 @@ namespace Ommel {
             set { _TargetFile = value; }
         }
 
-        public FileOperation() { }
-        public FileOperation(string key) { SetKey(key); }
+        public FileOperation() { Logger.MaxLogLevel = Logger.LogLevel.Debug;  }
+        public FileOperation(string key) : this() { SetKey(key); }
 
         public void SetKey(string key) {
             Key = key;

@@ -88,6 +88,7 @@
     <Compile Include="src\WizardPak\WakExtractor.cs" />
     <Compile Include="src\WizardPak\Aes128CounterMode.cs" />
     <Compile Include="src\WizardPak\NollaPrng.cs" />
+    <Compile Include="src\Operations\MergeLocalizationOperation.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />

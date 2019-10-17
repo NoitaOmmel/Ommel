@@ -26,7 +26,7 @@ end
 local ommelstatic = f()
 
 function ommelrt.is_event_name(name)
-	return name == "init" or name == "enter" or name == "leave"
+	return name == "init" or name == "enter" or name == "leave" or name == "top"
 end
 
 function ommelrt.error(mod, str)

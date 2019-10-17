@@ -26,9 +26,9 @@ namespace Ommel {
 
 	public class Ommel {
 #if DEBUG
-        public const string VERSION = "0.1.17-dev";
+        public const string VERSION = "0.1.18-dev";
 #else
-        public const string VERSION = "0.1.17";
+        public const string VERSION = "0.1.18";
 #endif
         public const string NOITA_VERSION = "mods-beta 1+";
 		public const string MODS_FOLDER_NAME = "mods";
@@ -567,6 +567,7 @@ namespace Ommel {
 
             byte[] dir_hash = null;
             foreach (var f in Directory.EnumerateFiles(dir_path, "*.*", SearchOption.AllDirectories)) {
+                if (f.Contains("/ommel/data") || f.Contains("\\ommel\\data")) continue;
                 using (SHA256 sha = SHA256.Create()) {
                     var file_bytes = File.ReadAllBytes(f);
                     var file_hash = sha.ComputeHash(file_bytes);
@@ -906,7 +907,6 @@ namespace Ommel {
 
         public void Start(string[] cmd_args) {
             if (UseLockFile) {
-                if (File.Exists("ommel.lock")) File.Delete("ommel.lock");
                 File.WriteAllText("ommel.lock", "");
             }
 

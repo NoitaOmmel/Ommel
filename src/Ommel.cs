@@ -26,9 +26,9 @@ namespace Ommel {
 
 	public class Ommel {
 #if DEBUG
-        public const string VERSION = "0.1.18-dev";
+        public const string VERSION = "0.1.19-dev";
 #else
-        public const string VERSION = "0.1.18";
+        public const string VERSION = "0.1.19";
 #endif
         public const string NOITA_VERSION = "mods-beta 1+";
 		public const string MODS_FOLDER_NAME = "mods";
@@ -413,6 +413,7 @@ namespace Ommel {
         private void CheckIfUpdated() {
             if (File.Exists(NoitaDataWakPath)) {
                 Logger.Info($"Data.wak exists - assuming the game updated! (or first time running)");
+                if (File.Exists(NoitaOmmelChecksumPath)) File.Delete(NoitaOmmelChecksumPath);
                 ClearBackup();
                 DeleteWakFiles();
                 ExtractWakFiles();

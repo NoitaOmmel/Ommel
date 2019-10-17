@@ -45,13 +45,13 @@ namespace Ommel {
 			if (event_files == null) {
 				loader.RegisterModifiedFile(TargetFile);
 				event_files = loader.RegisterLuaModEvent(Event, TargetFile);
-
-				var lua_parser = new NetLua.Parser();
-				var block = lua_parser.ParseFile(loader.ExpandTargetPathDefaulted(TargetFile));
-				NetLua.Ast.IStatement first_non_dofile = null;
-				int offset = 0;
+                int offset = 0;
 
                 if (Event == "enter") {
+                    var lua_parser = new NetLua.Parser();
+				    var block = lua_parser.ParseFile(loader.ExpandTargetPathDefaulted(TargetFile));
+				    NetLua.Ast.IStatement first_non_dofile = null;
+				
                     for (var i = 0; i < block.Statements.Count; i++) {
                         var statement = block.Statements[i];
 

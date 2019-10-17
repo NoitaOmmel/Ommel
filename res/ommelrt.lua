@@ -48,8 +48,11 @@ function ommelrt.run_event(ev, filename)
     
     info("ommel", "running event: " .. tostring(ev))
 
-	local ev_files = ommelstatic.EVENTS[ev]
-	if ev_files == nil then return end
+	local ev_targets = ommelstatic.EVENTS[ev]
+	if ev_targets == nil then return end
+    
+    local ev_files = ev_targets[filename]
+    if ev_files == nil then return end
     
     info("ommel", "files to run: " .. tostring(#ev_files))
 

@@ -33,11 +33,15 @@ namespace Ommel {
             AddFileOperation("LuaEvent", typeof(LuaEventOperation));
             AddFileOperation("XMLMerge", typeof(XMLMergeOperation));
             AddFileOperation("MergeLocalization", typeof(MergeLocalizationOperation));
+            AddFileOperation("Bulk", typeof(BulkOperation));
+            AddFileOperation("Message", typeof(MessageOperation));
         }
 
 		public HashSet<Ommel.FileType> BlacklistedFileTypes = new HashSet<Ommel.FileType>();
 		public HashSet<Ommel.FileType> WhitelistedFileTypes = new HashSet<Ommel.FileType>();
-		public bool TargetFileMustExist = true;
+        public bool SourceFileMustExist = true;
+        public bool TargetFileMustExist = true;
+        public bool AutoTargetFile = true;
 		public string Key = "none";
 		public Logger Logger;
 
@@ -52,7 +56,9 @@ namespace Ommel {
 
         public string TargetFile {
             get {
-                if (_TargetFile == null) _TargetFile = SourceFile; 
+                if (!AutoTargetFile) return _TargetFile;
+                if (_TargetFile == null) _TargetFile = SourceFile;
+                if (_TargetFile == null) return null;
                 return _TargetFile = _TargetFile.Replace(Ommel.MOD_ASSETS_NAME + "/", "data/");
             }
             set { _TargetFile = value; }
@@ -109,12 +115,12 @@ namespace Ommel {
         public void Execute(Ommel loader, Mod mod) {
 			Logger.Debug($"Executing");
 
-			if (SourceFile == null) {
+			if (SourceFileMustExist && SourceFile == null) {
 				Logger.Error($"No source file ('file') specified");
 				return;
 			}
 
-			if (!System.IO.File.Exists(mod.GetFile(SourceFile))) {
+			if (SourceFileMustExist && !System.IO.File.Exists(mod.GetFile(SourceFile))) {
 				Logger.Error($"Specified source file doesn't exist");
 				return;
 			}
@@ -123,13 +129,13 @@ namespace Ommel {
 				return;
 			}
 
-			if (WhitelistedFileTypes.Count > 0) {
+			if (TargetFile != null && WhitelistedFileTypes.Count > 0) {
 				var target_ftype = loader.GetFileTypeFromExtension(TargetFile);
 				if (!WhitelistedFileTypes.Contains(target_ftype)) {
 					Logger.Error($"File type '{target_ftype}' cannot be used in this operation");
 					return;
 				}
-			} else {
+			} else if (TargetFile != null) {
 				var target_ftype = loader.GetFileTypeFromExtension(TargetFile);
 				if (BlacklistedFileTypes.Contains(target_ftype)) {
 					Logger.Error($"File type '{target_ftype}' cannot be used in this operation");
@@ -180,6 +186,31 @@ namespace Ommel {
 
         public virtual void ConvertToNoitaAPI(Mod mod, StreamWriter writer) {
             writer.WriteLine($"-- No conversion for operation {Key}");
+        }
+
+        public virtual void CopyTo(FileOperation target) {
+            target.SetKey(Key);
+            target.SourceFileMustExist = SourceFileMustExist;
+            target.SourceFile = SourceFile;
+            target.TargetFileMustExist = TargetFileMustExist;
+            target.TargetFile = TargetFile;
+            target.Placeholders = Placeholders;
+            target.PlaceholderFile = PlaceholderFile;
+            target.BlacklistedFileTypes = BlacklistedFileTypes;
+            target.WhitelistedFileTypes = WhitelistedFileTypes;
+            target.AutoTargetFile = AutoTargetFile;
+        }
+
+        public static FileOperation Copy(FileOperation op) {
+            Type op_type;
+            if (!FileOperation.FileOperationsByKey.TryGetValue(op.Key, out op_type)) {
+                throw new Exception($"Unknown file operation: {op.Key}");
+            }
+
+            var new_op = FileOperation.CreateFileOperation<FileOperation>(op.Key, op_type);
+            op.CopyTo(new_op);
+
+            return new_op;
         }
     }
 }

@@ -21,6 +21,10 @@ namespace Ommel {
 			WhitelistedFileTypes.Add(Ommel.FileType.Lua);
 		}
 
+        public override void CopyTo(FileOperation target) {
+            ((LuaInsertOperation)target).LuaInsertTarget = LuaInsertTarget;
+        }
+
         public override void FillInChild(XmlNode node) {
             if (!(node is XmlElement)) return;
 

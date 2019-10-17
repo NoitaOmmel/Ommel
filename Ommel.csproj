@@ -89,6 +89,8 @@
     <Compile Include="src\WizardPak\Aes128CounterMode.cs" />
     <Compile Include="src\WizardPak\NollaPrng.cs" />
     <Compile Include="src\Operations\MergeLocalizationOperation.cs" />
+    <Compile Include="src\Operations\BulkOperation.cs" />
+    <Compile Include="src\Operations\MessageOperation.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />

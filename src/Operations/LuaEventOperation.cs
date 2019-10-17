@@ -12,6 +12,7 @@ namespace Ommel {
         public static HashSet<string> ValidEvents = new HashSet<string> {
 			"init",
 			"enter",
+            "top",
 			"leave"
 		};
 
@@ -20,6 +21,10 @@ namespace Ommel {
 
 			TargetFileMustExist = false;
 		}
+
+        public override void CopyTo(FileOperation target) {
+            ((LuaEventOperation)target).Event = Event;
+        }
 
         public override void FillInChild(XmlNode node) {
             if (!(node is XmlElement)) return;
@@ -35,38 +40,40 @@ namespace Ommel {
 
 			if (!loader.FileExists(TargetFile)) throw new Exception("Target file doesn't exist");
 
-			var event_files = loader.TryGetLuaModEvent(Event);
+			var event_files = loader.TryGetLuaModEvent(Event, TargetFile);
             var mod_source_file = mod.GetFile(SourceFile);
 			if (event_files == null) {
 				loader.RegisterModifiedFile(TargetFile);
-				event_files = loader.RegisterLuaModEvent(Event);
+				event_files = loader.RegisterLuaModEvent(Event, TargetFile);
 
 				var lua_parser = new NetLua.Parser();
 				var block = lua_parser.ParseFile(loader.ExpandTargetPathDefaulted(TargetFile));
 				NetLua.Ast.IStatement first_non_dofile = null;
 				int offset = 0;
 
-				for (var i = 0; i < block.Statements.Count; i++) {
-					var statement = block.Statements[i];
+                if (Event == "enter") {
+                    for (var i = 0; i < block.Statements.Count; i++) {
+                        var statement = block.Statements[i];
 
-					if (statement is NetLua.Ast.FunctionCall) {
-						var call = (NetLua.Ast.FunctionCall)statement;
-						if (call.Function is NetLua.Ast.Variable) {
-							var func = (NetLua.Ast.Variable)call.Function;
+                        if (statement is NetLua.Ast.FunctionCall) {
+                            var call = (NetLua.Ast.FunctionCall)statement;
+                            if (call.Function is NetLua.Ast.Variable) {
+                                var func = (NetLua.Ast.Variable)call.Function;
 
-							if (func.Name == "dofile") continue;
-						}
-					}
+                                if (func.Name == "dofile") continue;
+                            }
+                        }
 
-					first_non_dofile = statement;
-					Logger.Debug($"Matched AST");
-					break;
-				}
+                        first_non_dofile = statement;
+                        Logger.Debug($"Matched AST");
+                        break;
+                    }
 
-				if (first_non_dofile == null) {
-					Logger.Warn("Failed to match AST - empty file? Inserting call at the very beginning");
-				}
-				else offset = first_non_dofile.Span.Location.Position;
+                    if (first_non_dofile == null) {
+                        Logger.Warn("Failed to match AST - empty file? Inserting call at the very beginning");
+                    }
+                    else offset = first_non_dofile.Span.Location.Position;
+                }
 
 				var event_caller = new StringBuilder();
 				event_caller.AppendLine("local ommelrt = loadfile(\"data/ommel/ommelrt.lua\")()");
@@ -78,8 +85,14 @@ namespace Ommel {
 
 				using (var target_file = new StreamReader(loader.ExpandTargetPathDefaulted(TargetFile))) {
 					using (var source_file = new StringReader(event_caller.ToString())) {
-						new_target_content = InsertAtPos(target_file, offset, source_file, false);
-					}
+                        if (Event == "enter" || Event == "top" || Event == "init") {
+                            new_target_content = InsertAtPos(target_file, offset, source_file, false);
+                        } else if (Event == "leave") {
+                            new_target_content = target_file.ReadToEnd();
+                            new_target_content += "\r\n";
+                            new_target_content += source_file.ReadToEnd();
+                        }
+                    }
 				}
 
 				loader.DeleteFile(TargetFile);

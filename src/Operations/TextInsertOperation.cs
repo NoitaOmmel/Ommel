@@ -15,6 +15,11 @@ namespace Ommel {
 			WhitelistedFileTypes.Add(Ommel.FileType.Other);
 		}
 
+        public override void CopyTo(FileOperation target) {
+            ((TextInsertOperation)target).Line = Line;
+            ((TextInsertOperation)target).Offset = Offset;
+        }
+
         public override void FillInChild(XmlNode node) {
             if (!(node is XmlElement)) return;
 

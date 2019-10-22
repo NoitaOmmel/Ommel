@@ -25,6 +25,7 @@ namespace Ommel {
             Operations = new List<FileOperation>();
             for (var i = 0; i < elem.ChildNodes.Count; i++) {
                 var child = elem.ChildNodes[i];
+                if (!(child is XmlElement)) continue;
 
                 Type op_type;
                 if (!FileOperation.FileOperationsByKey.TryGetValue(child.Name, out op_type)) {

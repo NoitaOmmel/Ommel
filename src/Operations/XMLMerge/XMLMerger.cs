@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Xml;
@@ -80,8 +81,74 @@ namespace Ommel {
                 x.SetAttribute(a.Attributes[i].Name, a.Attributes[i].Value);
             }
 
+            var edited_attrs = new Dictionary<string, string>();
+
             for (var i = 0; i < b.Attributes.Count; i++) {
-                 x.SetAttribute(b.Attributes[i].Name, b.Attributes[i].Value);
+                var patch_attrib = b.Attributes[i];
+                if (patch_attrib.Name.StartsWith($"CSVAPPEND_", StringComparison.InvariantCulture)) {
+                    var target_name = patch_attrib.Name.Substring($"CSVAPPEND_".Length);
+                    string target_value;
+                    if (!edited_attrs.TryGetValue(target_name, out target_value)) {
+                        target_value = a.Attributes[target_name]?.Value;
+                    }
+                    if (patch_attrib.Value.Length == 0) {
+                        throw new Exception("CSVAPPEND_... special attribute must have at least the first character (separator)");
+                    }
+                    var separator = patch_attrib.Value[0];
+                    var patch_value = patch_attrib.Value.Substring(1);
+
+                    string new_value;
+                    if (string.IsNullOrWhiteSpace(target_value)) {
+                        new_value = patch_value;
+                    }
+                    else {
+                        new_value = target_value + separator + patch_value;
+                    }
+                    edited_attrs[target_name] = new_value;
+                    x.SetAttribute(target_name, new_value);
+                } else if (patch_attrib.Name.StartsWith($"CSVREMOVE_", StringComparison.InvariantCulture)) {
+                    var target_name = patch_attrib.Name.Substring($"CSVREMOVE_".Length);
+                    string target_value;
+                    if (!edited_attrs.TryGetValue(target_name, out target_value)) {
+                        target_value = a.Attributes[target_name]?.Value;
+                    }
+                    if (patch_attrib.Value.Length == 0) {
+                        throw new Exception("CSVREMOVE_... special attribute must have at least the first character (separator)");
+                    }
+                    var separator = patch_attrib.Value[0];
+
+                    if (target_value == null) continue;
+                    var csv_elem_to_remove = patch_attrib.Value.Substring(1);
+                    var csv_index_to_remove = -1;
+
+                    if (csv_elem_to_remove.StartsWith("@", StringComparison.InvariantCulture)) {
+                        csv_index_to_remove = int.Parse(csv_elem_to_remove.Substring(1));
+                    }
+
+                    var csv_split = target_value.Split(separator);
+                    var new_value_builder = new StringBuilder();
+                    var matched = false;
+                    for (var j = 0; j < csv_split.Length; j++) {
+                        var csv_entry = csv_split[j];
+                        if (csv_index_to_remove != -1) {
+                            if (j == csv_index_to_remove) continue;
+                        } else {
+                            if (csv_entry == csv_elem_to_remove && !matched) {
+                                matched = true;
+                                continue;
+                            }
+                        }
+                        new_value_builder.Append(csv_entry);
+                        if (j != csv_split.Length - 1) new_value_builder.Append(separator);
+                    }
+
+                    var new_value = new_value_builder.ToString();
+
+                    edited_attrs[target_name] = new_value;
+                    x.SetAttribute(target_name, new_value);
+                } else {
+                    x.SetAttribute(b.Attributes[i].Name, b.Attributes[i].Value);
+                }
             }
 
             var patch_offs = 0;

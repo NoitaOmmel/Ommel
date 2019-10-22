@@ -32,7 +32,7 @@ namespace Ommel {
             AddFileOperation("Copy", typeof(CopyOperation));
             AddFileOperation("LuaEvent", typeof(LuaEventOperation));
             AddFileOperation("XMLMerge", typeof(XMLMergeOperation));
-            AddFileOperation("MergeLocalization", typeof(MergeLocalizationOperation));
+            AddFileOperation("Localize", typeof(LocalizeOperation));
             AddFileOperation("Bulk", typeof(BulkOperation));
             AddFileOperation("Message", typeof(MessageOperation));
         }

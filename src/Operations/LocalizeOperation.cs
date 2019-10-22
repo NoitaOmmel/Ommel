@@ -5,10 +5,10 @@ using System.Text;
 using System.Xml;
 
 namespace Ommel {
-    public class MergeLocalizationOperation : FileOperation {
+    public class LocalizeOperation : FileOperation {
         public const string TRANSLATION_CSV_FILE = "data/translations/common.csv";
 
-        public MergeLocalizationOperation() : base("AddLocalization") {
+        public LocalizeOperation() : base("Localize") {
             TargetFileMustExist = false;
         }
 

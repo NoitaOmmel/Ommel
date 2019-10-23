@@ -26,9 +26,9 @@ namespace Ommel {
 
 	public class Ommel {
 #if DEBUG
-        public const string VERSION = "0.1.21-dev";
+        public const string VERSION = "0.1.22-dev";
 #else
-        public const string VERSION = "0.1.21";
+        public const string VERSION = "0.1.22";
 #endif
         public const string NOITA_VERSION = "mods-beta 1+";
 		public const string MODS_FOLDER_NAME = "mods";
@@ -448,6 +448,7 @@ namespace Ommel {
                         var wak_file = f.ReadLine();
                         var wak_file_path = Path.Combine(NoitaPath, wak_file);
                         Logger.Debug($"Deleting tracked wak file: {wak_file}");
+                        File.Delete(wak_file_path);
                     }
                 }
                 File.Delete(NoitaOmmelExtractInfoPath);

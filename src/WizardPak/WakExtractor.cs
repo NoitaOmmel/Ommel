@@ -29,11 +29,17 @@ using ModTheGungeon;
  */
 
 namespace Ommel {
-    public static class WakExtractor {
+    public class WakExtractor {
         public static Logger Logger = new Logger("WakExtractor");
         static readonly byte[] AESKey = NollaPrng.Get16Seeded(0);
 
-        public static List<string> Extract(string wak_path, string target_dir) {
+        public bool Decrypt = false;
+
+        public WakExtractor(bool decrypt) {
+            Decrypt = decrypt;
+        }
+
+        public List<string> Extract(string wak_path, string target_dir) {
             var files = new List<string>();
 
             using (var stream = File.OpenRead(wak_path)) {
@@ -69,7 +75,13 @@ namespace Ommel {
             return files;
         }
 
-         public static byte[] DecryptStream(Stream stream, int length, int iv) {
+         public byte[] DecryptStream(Stream stream, int length, int iv) {
+            var buff = new byte[length];
+            if (!Decrypt) {
+                stream.Read(buff, 0, length);
+                return buff;
+            }
+
             var plaintext = new byte[length];
             using (var aesAlg = new Aes128CounterMode(NollaPrng.Get16Seeded(iv))) {
                 // Create a decryptor to perform the stream transform.

@@ -26,9 +26,9 @@ namespace Ommel {
 
 	public class Ommel {
 #if DEBUG
-        public const string VERSION = "0.1.23-dev";
+        public const string VERSION = "0.1.24-dev";
 #else
-        public const string VERSION = "0.1.23";
+        public const string VERSION = "0.1.24";
 #endif
         public const string NOITA_VERSION = "mods-beta 1+";
 		public const string MODS_FOLDER_NAME = "mods";
@@ -430,6 +430,7 @@ namespace Ommel {
             Logger.Info($"Extracting files - this may take a couple of seconds");
 
             var extractor = new WakExtractor(decrypt: false);
+            extractor.EnableDecryptIfOld(NoitaDataWakPath);
             var files = extractor.Extract(NoitaDataWakPath, NoitaPath);
             using (var s = new StreamWriter(File.OpenWrite(NoitaOmmelExtractInfoPath))) {
                 for (var i = 0; i < files.Count; i++) {

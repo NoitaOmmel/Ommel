@@ -32,11 +32,40 @@ namespace Ommel {
     public class WakExtractor {
         public static Logger Logger = new Logger("WakExtractor");
         static readonly byte[] AESKey = NollaPrng.Get16Seeded(0);
+        public static readonly byte[] PreUnencryptedSHA256 = {
+            0xb3, 0x84,
+            0x37, 0xe1, 0x5c, 0x6a, 0x73, 0x50, 0x2a, 0x59, 0x7d, 0x12,
+            0xc6, 0x4a, 0xc9, 0x94, 0xee, 0xdc, 0xdb, 0xca, 0x0c, 0xd3,
+            0x51, 0xd1, 0x1f, 0x3f, 0xf9, 0xbe, 0x3a, 0xc2, 0x2e, 0xa2
+        };
 
         public bool Decrypt = false;
 
         public WakExtractor(bool decrypt) {
             Decrypt = decrypt;
+        }
+
+        public void EnableDecryptIfOld(string wak_path) {
+            var bytes = File.ReadAllBytes(wak_path);
+            byte[] hash = null;
+            using (var sha256 = new SHA256Managed()) {
+                hash = sha256.ComputeHash(bytes);
+            }
+
+            var match = true;
+            for (var i = 0; i < hash.Length; i++) {
+                if (hash[i] != PreUnencryptedSHA256[i]) {
+                    match = false;
+                    break;
+                }
+            }
+
+            if (match) {
+                Logger.Debug($"Decryption force-enabled (main branch data.wak)");
+                Decrypt = true;
+            } else {
+                Logger.Debug($"Decryption NOT force-enabled");
+            }
         }
 
         public List<string> Extract(string wak_path, string target_dir) {

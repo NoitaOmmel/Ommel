@@ -146,10 +146,10 @@ namespace Ommel {
             var regex = new Regex(TargetPattern);
             Logger.Debug($"Target Pattern: {TargetPattern}");
 
-            var target_ents = Directory.GetFiles(loader.GetTargetPath(), "*.*", SearchOption.AllDirectories);
+            var target_ents = Directory.GetFiles(loader.NoitaPath, "*.*", SearchOption.AllDirectories);
             for (var i = 0; i < target_ents.Length; i++) {
-                var start_idx = loader.GetTargetPath().Length + 1;
-                var data_ent = target_ents[i].Substring(start_idx);
+                var start_idx = loader.NoitaPath.Length + 1;
+                var data_ent = target_ents[i].Substring(start_idx).Replace("\\", "/");
                 if (!regex.IsMatch(data_ent)) continue;
                 var skip = false;
                 if (TargetExceptionRules != null) {

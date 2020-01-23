@@ -26,9 +26,9 @@ namespace Ommel {
 
 	public class Ommel {
 #if DEBUG
-        public const string VERSION = "0.1.24-dev";
+        public const string VERSION = "0.1.25-dev";
 #else
-        public const string VERSION = "0.1.24";
+        public const string VERSION = "0.1.25";
 #endif
         public const string NOITA_VERSION = "mods-beta 1+";
 		public const string MODS_FOLDER_NAME = "mods";
@@ -61,7 +61,21 @@ namespace Ommel {
 		public string NoitaPath;
 		public string NoitaModsPath;
         public string NoitaAppDataPath;
-        public string NoitaSaveConfigPath;
+
+        public static readonly byte[] LastOldModStorageExeChecksum = new byte[] {
+            0xe2, 0xa5, 0x54, 0x90, 0xe6, 0x06, 0x27, 0x77, 0xad, 0xa5, 0x38,
+            0x39, 0x46, 0xb5, 0x20, 0xc4, 0xb9, 0xe2, 0x3a, 0x75, 0xea, 0x9b,
+            0xe3, 0xa6, 0xf9, 0x08, 0x2e, 0x43, 0x2b, 0xe1, 0x70, 0x00
+        };
+        public static readonly byte[] LastOldModStorageDevExeChecksum = new byte[] {
+            0x8c, 0xb8, 0x70, 0x21, 0xa2, 0x84, 0x32, 0xa7, 0xea, 0x04, 0x71,
+            0xcf, 0x27, 0x23, 0xb3, 0xc9, 0xb3, 0x08, 0xe8, 0x17, 0xc9, 0xe3,
+            0x6a, 0x40, 0x92, 0x25, 0xe2, 0xe2, 0x98, 0xab, 0xb0, 0x79
+        };
+        public string NoitaModConfigPath;  // mod listing, 23.01 beta branch
+        public string NoitaSaveConfigPath; // mod listing, 23.01 main branch
+        public bool UseOldModStorage;
+
         public string NoitaOmmelBackupPath;
 		public string NoitaOmmelBackupFileInfoPath;
 		public string NoitaOmmelDataPath;
@@ -94,7 +108,10 @@ namespace Ommel {
 
         public List<string> Flags = new List<string>();
 
-        private NoitaConfig SaveConfig;
+        //private NoitaConfig SaveConfig; // @OLD
+
+        private List<string> EnabledMods;
+
         private bool CurrentlyStitchingMods;
         private string LastStitchedMod;
         private StreamWriter LogFile;
@@ -169,6 +186,7 @@ namespace Ommel {
         private void SetAppdataPaths(string noita_appdata_path) {
             NoitaAppDataPath = noita_appdata_path;
             NoitaSaveConfigPath = Path.Combine(NoitaAppDataPath, "save_shared", "config.xml");
+            NoitaModConfigPath = Path.Combine(NoitaAppDataPath, "save00", "mod_config.xml");
         }
 
 		private void VerifyPaths() {
@@ -251,9 +269,8 @@ namespace Ommel {
                     LoadMod(path);
                 }
             } else {
-                var conf = SaveConfig;
-                for (var i = 0; i < conf.ModsActive.Count; i++) {
-                    var mod = conf.ModsActive[i];
+                for (var i = 0; i < EnabledMods.Count; i++) {
+                    var mod = EnabledMods[i];
                     var path = Path.Combine(NoitaModsPath, mod);
                     if (!Directory.Exists(path)) {
                         Logger.Warn($"Ignoring mod entry '{mod}' (set in load order but doesn't exist)");
@@ -395,19 +412,68 @@ namespace Ommel {
 			}
 		}
 
-        private NoitaConfig LoadSaveConfig() {
-            var conf = new NoitaConfig();
-            if (!File.Exists(NoitaSaveConfigPath)) {
-                Logger.Warn($"Save config doesn't exist ('{NoitaSaveConfigPath}', using defaults)");
-                return conf;
+        private void CheckIfOldModStorage() {
+            var bytes = File.ReadAllBytes(NoitaLaunchExe);
+            byte[] hash = null;
+            using (var sha256 = new SHA256Managed()) {
+                hash = sha256.ComputeHash(bytes);
             }
-            var doc = new XmlDocument();
-            using (var xr = XmlReader.Create(File.OpenRead(NoitaSaveConfigPath), new XmlReaderSettings { CheckCharacters = false })) {
-                doc.Load(xr);
+
+            var match = true;
+            for (var i = 0; i < hash.Length; i++) {
+                if (hash[i] != LastOldModStorageExeChecksum[i]) {
+                    match = false;
+                    break;
+                }
             }
-            conf.FillIn(doc.ChildNodes[0] as XmlElement);
-            SaveConfig = conf;
-            return conf;
+
+            if (match == false) {
+                match = true;
+                for (var i = 0; i < hash.Length; i++) {
+                    if (hash[i] != LastOldModStorageDevExeChecksum[i]) {
+                        match = false;
+                        break;
+                    }
+                }
+            }
+
+            UseOldModStorage = match;
+        }
+
+        private void LoadEnabledMods() {
+            CheckIfOldModStorage();
+
+            EnabledMods = new List<string>();
+
+            if (UseOldModStorage) {
+                Logger.Warn($"Using old mod storage");
+                var conf = new NoitaConfig();
+                if (!File.Exists(NoitaSaveConfigPath)) {
+                    Logger.Warn($"Save config doesn't exist ('{NoitaSaveConfigPath}', using defaults)");
+                    return;
+                }
+                var doc = new XmlDocument();
+                using (var xr = XmlReader.Create(File.OpenRead(NoitaSaveConfigPath), new XmlReaderSettings { CheckCharacters = false })) {
+                    doc.Load(xr);
+                }
+                conf.FillIn(doc.ChildNodes[0] as XmlElement);
+                for (var i = 0; i < conf.ModsActive.Count; i++) {
+                    EnabledMods.Add(conf.ModsActive[i]);
+                }
+            } else {
+                Logger.Debug($"Using new mod storage");
+                var conf = new NoitaModConfig();
+                if (!File.Exists(NoitaModConfigPath)) {
+                    Logger.Warn($"Mod config doesn't exist ('{NoitaModConfigPath}', using defaults)");
+                    return;
+                }
+                var doc = new XmlDocument();
+                using (var xr = XmlReader.Create(File.OpenRead(NoitaModConfigPath), new XmlReaderSettings { CheckCharacters = false })) {
+                    doc.Load(xr);
+                }
+                conf.FillIn(doc.ChildNodes[0] as XmlElement);
+                EnabledMods = conf.EnabledMods;
+            }
         }
 
         private void CheckIfUpdated() {
@@ -595,8 +661,8 @@ namespace Ommel {
             Logger.Debug($"Calculating checksum for mods");
 
             byte[] combined_checksum = null;
-            for (var i = 0; i < SaveConfig.ModsActive.Count; i++) {
-                var mod = SaveConfig.ModsActive[i];
+            for (var i = 0; i < EnabledMods.Count; i++) {
+                var mod = EnabledMods[i];
 
                 var full_path = Path.Combine(NoitaModsPath, mod);
                 if (!Directory.Exists(full_path)) {
@@ -607,6 +673,11 @@ namespace Ommel {
                 var mod_checksum = CalculateDirChecksum(full_path);
                 if (combined_checksum == null) combined_checksum = mod_checksum;
                 else XOR(combined_checksum, mod_checksum);
+            }
+
+            if (combined_checksum == null) {
+                Logger.Error($"No mods to checksum!");
+                return new byte[64];
             }
 
             return combined_checksum;
@@ -949,7 +1020,7 @@ namespace Ommel {
                 CheckIfUpdated();
                 TryRestoreData();
                 VerifyPaths();
-                LoadSaveConfig();
+                LoadEnabledMods();
 
                 if (!CheckNeedsRestitch()) {
                     Logger.Info($"Not stitching.");
